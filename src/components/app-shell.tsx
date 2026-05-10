@@ -1,5 +1,6 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Car, Droplet, ShieldCheck, ScanLine, Gauge, Wrench } from "lucide-react";
+import { Car, Droplet, ShieldCheck, ScanLine, Gauge, Wrench, LogOut } from "lucide-react";
+import { useAuth } from "@/lib/auth";
 
 const links = [
   { to: "/", label: "Tableau", icon: Gauge },

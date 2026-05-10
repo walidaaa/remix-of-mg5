@@ -108,12 +108,46 @@ function RootShell({ children }: { children: React.ReactNode }) {
   );
 }
 
+import { AuthProvider, useAuth } from "@/lib/auth";
+import { useRouter as useTanRouter } from "@tanstack/react-router";
+import { useEffect } from "react";
+
+function AuthGate({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  const router = useTanRouter();
+  const pathname = router.state.location.pathname;
+
+  useEffect(() => {
+    if (loading) return;
+    if (!user && pathname !== "/login") {
+      router.navigate({ to: "/login" });
+    }
+    if (user && pathname === "/login") {
+      router.navigate({ to: "/" });
+    }
+  }, [user, loading, pathname, router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen grid place-items-center bg-background">
+        <div className="text-muted-foreground text-sm">Chargement…</div>
+      </div>
+    );
+  }
+  if (!user && pathname !== "/login") return null;
+  return <>{children}</>;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
+      <AuthProvider>
+        <AuthGate>
+          <Outlet />
+        </AuthGate>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
