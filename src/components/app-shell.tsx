@@ -1,5 +1,6 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Car, Droplet, ShieldCheck, ScanLine, Gauge, Wrench } from "lucide-react";
+import { Car, Droplet, ShieldCheck, ScanLine, Gauge, Wrench, LogOut } from "lucide-react";
+import { useAuth } from "@/lib/auth";
 
 const links = [
   { to: "/", label: "Tableau", icon: Gauge },
@@ -12,6 +13,7 @@ const links = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { pathname } = useLocation();
+  const { user, signOut } = useAuth();
   return (
     <div className="min-h-screen pb-24 md:pb-0 md:pl-64">
       {/* Sidebar desktop */}
@@ -40,6 +42,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </Link>
           );
         })}
+        <div className="mt-auto pt-4 border-t border-border">
+          <div className="text-xs text-muted-foreground truncate mb-2 px-2">{user?.email}</div>
+          <button
+            onClick={() => signOut()}
+            className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground"
+          >
+            <LogOut size={16} /> <span className="text-sm">Déconnexion</span>
+          </button>
+        </div>
       </aside>
 
       {/* Main */}

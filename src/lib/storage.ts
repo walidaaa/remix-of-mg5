@@ -1,3 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
+
 export type Transmission = "automatique" | "manuelle";
 
 export type Vehicle = {
@@ -8,12 +10,12 @@ export type Vehicle = {
   transmission: Transmission;
   annee: number;
   kmActuel: number;
-  intervalleVidange: number; // km entre vidanges
+  intervalleVidange: number;
 };
 
 export type OilChange = {
   id: string;
-  date: string; // ISO
+  date: string;
   km: number;
   typeHuile: string;
   filtreHuile: string;
@@ -77,20 +79,193 @@ export type AppData = {
   maintenance: MaintenanceItem[];
 };
 
-const STORAGE_KEY = "mg5-maintenance-v1";
+export const emptyData: AppData = { vehicle: null, oilChanges: [], insurance: null, maintenance: [] };
 
-const empty: AppData = { vehicle: null, oilChanges: [], insurance: null, maintenance: [] };
+const REFRESH_EVENT = "mg5-data-update";
+function ping() {
+  if (typeof window !== "undefined") window.dispatchEvent(new Event(REFRESH_EVENT));
+}
+export const DATA_EVENT = REFRESH_EVENT;
 
-export function addMaintenance(m: Omit<MaintenanceItem, "id">) {
-  const d = loadData();
-  const item: MaintenanceItem = { ...m, id: crypto.randomUUID() };
-  const vehicle = d.vehicle ? { ...d.vehicle, kmActuel: Math.max(d.vehicle.kmActuel, m.km) } : null;
-  saveData({ ...d, vehicle, maintenance: [item, ...d.maintenance].sort((a, b) => +new Date(b.date) - +new Date(a.date)) });
+async function uid(): Promise<string | null> {
+  const { data } = await supabase.auth.getSession();
+  return data.session?.user.id ?? null;
 }
 
-export function deleteMaintenance(id: string) {
-  const d = loadData();
-  saveData({ ...d, maintenance: d.maintenance.filter((m) => m.id !== id) });
+export async function fetchAppData(): Promise<AppData> {
+  const userId = await uid();
+  if (!userId) return emptyData;
+
+  const [veh, oils, ins, maint] = await Promise.all([
+    supabase.from("vehicles").select("*").eq("user_id", userId).maybeSingle(),
+    supabase.from("oil_changes").select("*").eq("user_id", userId).order("km", { ascending: false }),
+    supabase.from("insurance").select("*").eq("user_id", userId).maybeSingle(),
+    supabase.from("maintenance_items").select("*").eq("user_id", userId).order("date", { ascending: false }),
+  ]);
+
+  const vehicle: Vehicle | null = veh.data
+    ? {
+        matricule: veh.data.matricule,
+        marque: veh.data.marque,
+        modele: veh.data.modele,
+        couleur: veh.data.couleur,
+        transmission: veh.data.transmission as Transmission,
+        annee: veh.data.annee,
+        kmActuel: veh.data.km_actuel,
+        intervalleVidange: veh.data.intervalle_vidange,
+      }
+    : null;
+
+  const oilChanges: OilChange[] = (oils.data ?? []).map((o) => ({
+    id: o.id,
+    date: o.date,
+    km: o.km,
+    typeHuile: o.type_huile,
+    filtreHuile: o.filtre_huile ?? "",
+    cout: o.cout != null ? Number(o.cout) : undefined,
+    notes: o.notes ?? undefined,
+  }));
+
+  const insurance: Insurance | null = ins.data
+    ? {
+        compagnie: ins.data.compagnie,
+        numeroPolice: ins.data.numero_police,
+        dateDebut: ins.data.date_debut ?? "",
+        dateFin: ins.data.date_fin ?? "",
+      }
+    : null;
+
+  const maintenance: MaintenanceItem[] = (maint.data ?? []).map((m) => ({
+    id: m.id,
+    type: m.type as MaintenanceType,
+    date: m.date,
+    km: m.km,
+    intervalleKm: m.intervalle_km ?? undefined,
+    intervalleMois: m.intervalle_mois ?? undefined,
+    cout: m.cout != null ? Number(m.cout) : undefined,
+    notes: m.notes ?? undefined,
+  }));
+
+  return { vehicle, oilChanges, insurance, maintenance };
+}
+
+export async function updateVehicle(v: Vehicle) {
+  const userId = await uid();
+  if (!userId) return;
+  await supabase.from("vehicles").upsert({
+    user_id: userId,
+    matricule: v.matricule,
+    marque: v.marque,
+    modele: v.modele,
+    couleur: v.couleur,
+    transmission: v.transmission,
+    annee: v.annee,
+    km_actuel: v.kmActuel,
+    intervalle_vidange: v.intervalleVidange,
+  });
+  ping();
+}
+
+export async function updateKm(km: number) {
+  const userId = await uid();
+  if (!userId) return;
+  await supabase.from("vehicles").update({ km_actuel: km }).eq("user_id", userId);
+  ping();
+}
+
+async function bumpKm(km: number) {
+  const userId = await uid();
+  if (!userId) return;
+  const { data } = await supabase.from("vehicles").select("km_actuel").eq("user_id", userId).maybeSingle();
+  if (data && km > data.km_actuel) {
+    await supabase.from("vehicles").update({ km_actuel: km }).eq("user_id", userId);
+  }
+}
+
+export async function addOilChange(o: Omit<OilChange, "id">) {
+  const userId = await uid();
+  if (!userId) return;
+  await supabase.from("oil_changes").insert({
+    user_id: userId,
+    date: o.date,
+    km: o.km,
+    type_huile: o.typeHuile,
+    filtre_huile: o.filtreHuile || null,
+    cout: o.cout ?? null,
+    notes: o.notes ?? null,
+  });
+  await bumpKm(o.km);
+  ping();
+}
+
+export async function deleteOilChange(id: string) {
+  await supabase.from("oil_changes").delete().eq("id", id);
+  ping();
+}
+
+export async function addMaintenance(m: Omit<MaintenanceItem, "id">) {
+  const userId = await uid();
+  if (!userId) return;
+  await supabase.from("maintenance_items").insert({
+    user_id: userId,
+    type: m.type,
+    date: m.date,
+    km: m.km,
+    intervalle_km: m.intervalleKm ?? null,
+    intervalle_mois: m.intervalleMois ?? null,
+    cout: m.cout ?? null,
+    notes: m.notes ?? null,
+  });
+  await bumpKm(m.km);
+  ping();
+}
+
+export async function deleteMaintenance(id: string) {
+  await supabase.from("maintenance_items").delete().eq("id", id);
+  ping();
+}
+
+export async function updateInsurance(i: Insurance) {
+  const userId = await uid();
+  if (!userId) return;
+  await supabase.from("insurance").upsert({
+    user_id: userId,
+    compagnie: i.compagnie,
+    numero_police: i.numeroPolice,
+    date_debut: i.dateDebut || null,
+    date_fin: i.dateFin || null,
+  });
+  ping();
+}
+
+export type Scan = { id: string; value: string; at: string };
+
+export async function addScan(value: string): Promise<Scan | null> {
+  const userId = await uid();
+  if (!userId) return null;
+  const { data } = await supabase
+    .from("scans")
+    .insert({ user_id: userId, value })
+    .select()
+    .single();
+  if (!data) return null;
+  return { id: data.id, value: data.value, at: data.scanned_at };
+}
+
+export async function fetchScans(limit = 30): Promise<Scan[]> {
+  const userId = await uid();
+  if (!userId) return [];
+  const { data } = await supabase
+    .from("scans")
+    .select("*")
+    .eq("user_id", userId)
+    .order("scanned_at", { ascending: false })
+    .limit(limit);
+  return (data ?? []).map((s) => ({ id: s.id, value: s.value, at: s.scanned_at }));
+}
+
+export async function deleteScan(id: string) {
+  await supabase.from("scans").delete().eq("id", id);
 }
 
 export function getMaintenanceStatus(item: MaintenanceItem, vehicle: Vehicle | null) {
@@ -112,55 +287,6 @@ export function getMaintenanceStatus(item: MaintenanceItem, vehicle: Vehicle | n
   else if (km <= 500 || j <= 15) alerte = "urgent";
   else if (km <= 1500 || j <= 45) alerte = "bientot";
   return { alerte, kmRestants, joursRestants };
-}
-
-export function loadData(): AppData {
-  if (typeof window === "undefined") return empty;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return empty;
-    return { ...empty, ...JSON.parse(raw) };
-  } catch {
-    return empty;
-  }
-}
-
-export function saveData(data: AppData) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  window.dispatchEvent(new Event("mg5-data-update"));
-}
-
-export function updateVehicle(v: Vehicle) {
-  const d = loadData();
-  saveData({ ...d, vehicle: v });
-}
-
-export function addOilChange(o: Omit<OilChange, "id">) {
-  const d = loadData();
-  const change: OilChange = { ...o, id: crypto.randomUUID() };
-  const next = [change, ...d.oilChanges].sort((a, b) => b.km - a.km);
-  // mise à jour km véhicule si plus récent
-  const vehicle = d.vehicle
-    ? { ...d.vehicle, kmActuel: Math.max(d.vehicle.kmActuel, o.km) }
-    : null;
-  saveData({ ...d, vehicle, oilChanges: next });
-}
-
-export function deleteOilChange(id: string) {
-  const d = loadData();
-  saveData({ ...d, oilChanges: d.oilChanges.filter((o) => o.id !== id) });
-}
-
-export function updateKm(km: number) {
-  const d = loadData();
-  if (!d.vehicle) return;
-  saveData({ ...d, vehicle: { ...d.vehicle, kmActuel: km } });
-}
-
-export function updateInsurance(i: Insurance) {
-  const d = loadData();
-  saveData({ ...d, insurance: i });
 }
 
 export function getNextOilChange(d: AppData): {

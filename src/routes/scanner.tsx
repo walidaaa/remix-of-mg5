@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { useEffect, useRef, useState } from "react";
-import { ScanLine, Camera, X, Copy, Check } from "lucide-react";
+import { ScanLine, Camera, X, Copy, Check, Trash2 } from "lucide-react";
+import { addScan, fetchScans, deleteScan, type Scan } from "@/lib/storage";
 
 export const Route = createFileRoute("/scanner")({
   head: () => ({
@@ -13,8 +14,6 @@ export const Route = createFileRoute("/scanner")({
   component: ScannerPage,
 });
 
-type Scan = { value: string; at: string };
-
 function ScannerPage() {
   const [active, setActive] = useState(false);
   const [results, setResults] = useState<Scan[]>([]);
@@ -22,6 +21,10 @@ function ScannerPage() {
   const [copied, setCopied] = useState<string | null>(null);
   const containerId = "qr-reader-element";
   const scannerRef = useRef<any>(null);
+
+  useEffect(() => {
+    fetchScans().then(setResults);
+  }, []);
 
   useEffect(() => {
     if (!active) return;
@@ -35,11 +38,10 @@ function ScannerPage() {
         await scanner.start(
           { facingMode: "environment" },
           { fps: 10, qrbox: { width: 250, height: 250 } },
-          (decoded: string) => {
-            setResults((prev) => {
-              if (prev[0]?.value === decoded) return prev;
-              return [{ value: decoded, at: new Date().toISOString() }, ...prev].slice(0, 20);
-            });
+          async (decoded: string) => {
+            if (results[0]?.value === decoded) return;
+            const saved = await addScan(decoded);
+            if (saved) setResults((prev) => [saved, ...prev].slice(0, 30));
           },
           () => {}
         );
@@ -110,16 +112,22 @@ function ScannerPage() {
           <p className="text-muted-foreground text-sm">Aucun code scanné.</p>
         ) : (
           <ul className="space-y-2">
-            {results.map((r, i) => (
-              <li key={i} className="rounded-xl gradient-card p-4 shadow-card flex items-center gap-3">
+            {results.map((r) => (
+              <li key={r.id} className="rounded-xl gradient-card p-4 shadow-card flex items-center gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="font-mono text-sm truncate">{r.value}</div>
                   <div className="text-xs text-muted-foreground">
-                    {new Date(r.at).toLocaleTimeString("fr-FR")}
+                    {new Date(r.at).toLocaleString("fr-FR")}
                   </div>
                 </div>
                 <button onClick={() => copy(r.value)} className="text-muted-foreground hover:text-primary p-2">
                   {copied === r.value ? <Check size={16} className="text-success" /> : <Copy size={16} />}
+                </button>
+                <button
+                  onClick={async () => { await deleteScan(r.id); setResults((p) => p.filter((x) => x.id !== r.id)); }}
+                  className="text-muted-foreground hover:text-destructive p-2"
+                >
+                  <Trash2 size={16} />
                 </button>
               </li>
             ))}
