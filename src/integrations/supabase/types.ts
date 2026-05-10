@@ -14,7 +14,189 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      insurance: {
+        Row: {
+          compagnie: string
+          date_debut: string | null
+          date_fin: string | null
+          numero_police: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          compagnie?: string
+          date_debut?: string | null
+          date_fin?: string | null
+          numero_police?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          compagnie?: string
+          date_debut?: string | null
+          date_fin?: string | null
+          numero_police?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      maintenance_items: {
+        Row: {
+          cout: number | null
+          created_at: string
+          date: string
+          id: string
+          intervalle_km: number | null
+          intervalle_mois: number | null
+          km: number
+          notes: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          cout?: number | null
+          created_at?: string
+          date: string
+          id?: string
+          intervalle_km?: number | null
+          intervalle_mois?: number | null
+          km: number
+          notes?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          cout?: number | null
+          created_at?: string
+          date?: string
+          id?: string
+          intervalle_km?: number | null
+          intervalle_mois?: number | null
+          km?: number
+          notes?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      oil_changes: {
+        Row: {
+          cout: number | null
+          created_at: string
+          date: string
+          filtre_huile: string | null
+          id: string
+          km: number
+          notes: string | null
+          type_huile: string
+          user_id: string
+        }
+        Insert: {
+          cout?: number | null
+          created_at?: string
+          date: string
+          filtre_huile?: string | null
+          id?: string
+          km: number
+          notes?: string | null
+          type_huile: string
+          user_id: string
+        }
+        Update: {
+          cout?: number | null
+          created_at?: string
+          date?: string
+          filtre_huile?: string | null
+          id?: string
+          km?: number
+          notes?: string | null
+          type_huile?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      scans: {
+        Row: {
+          id: string
+          scanned_at: string
+          user_id: string
+          value: string
+        }
+        Insert: {
+          id?: string
+          scanned_at?: string
+          user_id: string
+          value: string
+        }
+        Update: {
+          id?: string
+          scanned_at?: string
+          user_id?: string
+          value?: string
+        }
+        Relationships: []
+      }
+      vehicles: {
+        Row: {
+          annee: number
+          couleur: string
+          created_at: string
+          intervalle_vidange: number
+          km_actuel: number
+          marque: string
+          matricule: string
+          modele: string
+          transmission: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          annee?: number
+          couleur?: string
+          created_at?: string
+          intervalle_vidange?: number
+          km_actuel?: number
+          marque?: string
+          matricule?: string
+          modele?: string
+          transmission?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          annee?: number
+          couleur?: string
+          created_at?: string
+          intervalle_vidange?: number
+          km_actuel?: number
+          marque?: string
+          matricule?: string
+          modele?: string
+          transmission?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
