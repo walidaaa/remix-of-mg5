@@ -1,17 +1,28 @@
 import { useEffect, useState } from "react";
-import { loadData, type AppData } from "./storage";
+import { fetchAppData, emptyData, DATA_EVENT, type AppData } from "./storage";
+import { useAuth } from "./auth";
 
 export function useAppData(): AppData {
-  const [data, setData] = useState<AppData>(() => loadData());
+  const { user } = useAuth();
+  const [data, setData] = useState<AppData>(emptyData);
+
   useEffect(() => {
-    const refresh = () => setData(loadData());
-    refresh();
-    window.addEventListener("mg5-data-update", refresh);
-    window.addEventListener("storage", refresh);
-    return () => {
-      window.removeEventListener("mg5-data-update", refresh);
-      window.removeEventListener("storage", refresh);
+    let active = true;
+    if (!user) {
+      setData(emptyData);
+      return;
+    }
+    const refresh = async () => {
+      const d = await fetchAppData();
+      if (active) setData(d);
     };
-  }, []);
+    refresh();
+    window.addEventListener(DATA_EVENT, refresh);
+    return () => {
+      active = false;
+      window.removeEventListener(DATA_EVENT, refresh);
+    };
+  }, [user]);
+
   return data;
 }

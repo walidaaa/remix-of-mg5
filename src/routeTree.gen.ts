@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as VidangesRouteImport } from './routes/vidanges'
 import { Route as VehiculeRouteImport } from './routes/vehicule'
 import { Route as ScannerRouteImport } from './routes/scanner'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as EntretienRouteImport } from './routes/entretien'
 import { Route as AssuranceRouteImport } from './routes/assurance'
 import { Route as IndexRouteImport } from './routes/index'
@@ -29,6 +30,11 @@ const VehiculeRoute = VehiculeRouteImport.update({
 const ScannerRoute = ScannerRouteImport.update({
   id: '/scanner',
   path: '/scanner',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EntretienRoute = EntretienRouteImport.update({
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/assurance': typeof AssuranceRoute
   '/entretien': typeof EntretienRoute
+  '/login': typeof LoginRoute
   '/scanner': typeof ScannerRoute
   '/vehicule': typeof VehiculeRoute
   '/vidanges': typeof VidangesRoute
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/assurance': typeof AssuranceRoute
   '/entretien': typeof EntretienRoute
+  '/login': typeof LoginRoute
   '/scanner': typeof ScannerRoute
   '/vehicule': typeof VehiculeRoute
   '/vidanges': typeof VidangesRoute
@@ -68,6 +76,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/assurance': typeof AssuranceRoute
   '/entretien': typeof EntretienRoute
+  '/login': typeof LoginRoute
   '/scanner': typeof ScannerRoute
   '/vehicule': typeof VehiculeRoute
   '/vidanges': typeof VidangesRoute
@@ -78,16 +87,25 @@ export interface FileRouteTypes {
     | '/'
     | '/assurance'
     | '/entretien'
+    | '/login'
     | '/scanner'
     | '/vehicule'
     | '/vidanges'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/assurance' | '/entretien' | '/scanner' | '/vehicule' | '/vidanges'
+  to:
+    | '/'
+    | '/assurance'
+    | '/entretien'
+    | '/login'
+    | '/scanner'
+    | '/vehicule'
+    | '/vidanges'
   id:
     | '__root__'
     | '/'
     | '/assurance'
     | '/entretien'
+    | '/login'
     | '/scanner'
     | '/vehicule'
     | '/vidanges'
@@ -97,6 +115,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AssuranceRoute: typeof AssuranceRoute
   EntretienRoute: typeof EntretienRoute
+  LoginRoute: typeof LoginRoute
   ScannerRoute: typeof ScannerRoute
   VehiculeRoute: typeof VehiculeRoute
   VidangesRoute: typeof VidangesRoute
@@ -123,6 +142,13 @@ declare module '@tanstack/react-router' {
       path: '/scanner'
       fullPath: '/scanner'
       preLoaderRoute: typeof ScannerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/entretien': {
@@ -153,6 +179,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AssuranceRoute: AssuranceRoute,
   EntretienRoute: EntretienRoute,
+  LoginRoute: LoginRoute,
   ScannerRoute: ScannerRoute,
   VehiculeRoute: VehiculeRoute,
   VidangesRoute: VidangesRoute,
