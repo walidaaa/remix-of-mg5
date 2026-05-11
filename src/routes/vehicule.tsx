@@ -119,6 +119,7 @@ function VehiclePage() {
         </div>
       )}
 
+      {showForm && (
       <form onSubmit={submit} className="rounded-2xl gradient-card p-6 md:p-8 shadow-card grid gap-5 md:grid-cols-2">
         <Field label="Matricule" required>
           <input
