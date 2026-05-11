@@ -41,6 +41,7 @@ function VehiclePage() {
       intervalleVidange: 10000,
     }
   );
+  const [dernierVidangeKm, setDernierVidangeKm] = useState<string>("");
 
   useEffect(() => {
     fetchBrands().then((b) => {
@@ -61,9 +62,23 @@ function VehiclePage() {
   const set = <K extends keyof Vehicle>(k: K, val: Vehicle[K]) =>
     setForm((f) => ({ ...f, [k]: val }));
 
+  const isFirstSetup = !v || data.oilChanges.length === 0;
+  const prochainKm = useMemo(() => {
+    const base = data.oilChanges[0]?.km ?? Number(dernierVidangeKm || 0);
+    return base + (form.intervalleVidange || 0);
+  }, [data.oilChanges, dernierVidangeKm, form.intervalleVidange]);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     await updateVehicle(form);
+    if (isFirstSetup && dernierVidangeKm && Number(dernierVidangeKm) > 0) {
+      await addOilChange({
+        date: new Date().toISOString(),
+        km: Number(dernierVidangeKm),
+        typeHuile: "5W-30",
+        filtreHuile: "",
+      });
+    }
     setEditing(false);
   };
 
