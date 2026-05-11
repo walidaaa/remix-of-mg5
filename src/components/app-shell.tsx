@@ -49,7 +49,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Mobile top bar */}
       <header className="md:hidden fixed top-0 inset-x-0 z-40 h-14 bg-card/95 backdrop-blur border-b border-border flex items-center justify-between px-4">
         <div className="flex items-baseline gap-2">
-          <span className="font-display text-xl text-primary leading-none">MG5</span>
+          <span className="font-display text-xl text-primary leading-none">{brandLabel}</span>
           <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Maintenance</span>
         </div>
         <div className="flex items-center gap-2 min-w-0">
