@@ -118,12 +118,13 @@ export async function fetchAppData(): Promise<AppData> {
   const userId = await uid();
   if (!userId) return emptyData;
 
-  const [veh, oils, ins, maint, vig] = await Promise.all([
+  const [veh, oils, ins, maint, vig, vdoc] = await Promise.all([
     supabase.from("vehicles").select("*").eq("user_id", userId).maybeSingle(),
     supabase.from("oil_changes").select("*").eq("user_id", userId).order("km", { ascending: false }),
     supabase.from("insurance").select("*").eq("user_id", userId).maybeSingle(),
     supabase.from("maintenance_items").select("*").eq("user_id", userId).order("date", { ascending: false }),
     supabase.from("vignette").select("*").eq("user_id", userId).maybeSingle(),
+    supabase.from("vehicle_doc" as any).select("*").eq("user_id", userId).maybeSingle(),
   ]);
 
   const vehicle: Vehicle | null = veh.data
