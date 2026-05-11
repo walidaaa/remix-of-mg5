@@ -28,6 +28,17 @@ export type Insurance = {
   numeroPolice: string;
   dateDebut: string;
   dateFin: string;
+  cout?: number;
+  scanUrl?: string;
+};
+
+export type Vignette = {
+  compagnie: string;
+  numero: string;
+  dateDebut: string;
+  dateFin: string;
+  cout?: number;
+  scanUrl?: string;
 };
 
 export type MaintenanceType =
@@ -76,10 +87,11 @@ export type AppData = {
   vehicle: Vehicle | null;
   oilChanges: OilChange[];
   insurance: Insurance | null;
+  vignette: Vignette | null;
   maintenance: MaintenanceItem[];
 };
 
-export const emptyData: AppData = { vehicle: null, oilChanges: [], insurance: null, maintenance: [] };
+export const emptyData: AppData = { vehicle: null, oilChanges: [], insurance: null, vignette: null, maintenance: [] };
 
 const REFRESH_EVENT = "mg5-data-update";
 function ping() {
@@ -96,11 +108,12 @@ export async function fetchAppData(): Promise<AppData> {
   const userId = await uid();
   if (!userId) return emptyData;
 
-  const [veh, oils, ins, maint] = await Promise.all([
+  const [veh, oils, ins, maint, vig] = await Promise.all([
     supabase.from("vehicles").select("*").eq("user_id", userId).maybeSingle(),
     supabase.from("oil_changes").select("*").eq("user_id", userId).order("km", { ascending: false }),
     supabase.from("insurance").select("*").eq("user_id", userId).maybeSingle(),
     supabase.from("maintenance_items").select("*").eq("user_id", userId).order("date", { ascending: false }),
+    supabase.from("vignette").select("*").eq("user_id", userId).maybeSingle(),
   ]);
 
   const vehicle: Vehicle | null = veh.data
@@ -132,6 +145,19 @@ export async function fetchAppData(): Promise<AppData> {
         numeroPolice: ins.data.numero_police,
         dateDebut: ins.data.date_debut ?? "",
         dateFin: ins.data.date_fin ?? "",
+        cout: (ins.data as any).cout != null ? Number((ins.data as any).cout) : undefined,
+        scanUrl: (ins.data as any).scan_url ?? undefined,
+      }
+    : null;
+
+  const vignette: Vignette | null = vig.data
+    ? {
+        compagnie: (vig.data as any).compagnie ?? "",
+        numero: (vig.data as any).numero ?? "",
+        dateDebut: (vig.data as any).date_debut ?? "",
+        dateFin: (vig.data as any).date_fin ?? "",
+        cout: (vig.data as any).cout != null ? Number((vig.data as any).cout) : undefined,
+        scanUrl: (vig.data as any).scan_url ?? undefined,
       }
     : null;
 
@@ -146,7 +172,7 @@ export async function fetchAppData(): Promise<AppData> {
     notes: m.notes ?? undefined,
   }));
 
-  return { vehicle, oilChanges, insurance, maintenance };
+  return { vehicle, oilChanges, insurance, vignette, maintenance };
 }
 
 export async function updateVehicle(v: Vehicle) {
@@ -234,8 +260,44 @@ export async function updateInsurance(i: Insurance) {
     numero_police: i.numeroPolice,
     date_debut: i.dateDebut || null,
     date_fin: i.dateFin || null,
-  });
+    cout: i.cout ?? null,
+    scan_url: i.scanUrl ?? null,
+  } as any);
   ping();
+}
+
+export async function updateVignette(v: Vignette) {
+  const userId = await uid();
+  if (!userId) return;
+  await supabase.from("vignette" as any).upsert({
+    user_id: userId,
+    compagnie: v.compagnie,
+    numero: v.numero,
+    date_debut: v.dateDebut || null,
+    date_fin: v.dateFin || null,
+    cout: v.cout ?? null,
+    scan_url: v.scanUrl ?? null,
+  } as any);
+  ping();
+}
+
+export async function uploadDocument(kind: "assurance" | "vignette", file: File): Promise<string | null> {
+  const userId = await uid();
+  if (!userId) return null;
+  const ext = file.name.split(".").pop() || "jpg";
+  const path = `${userId}/${kind}-${Date.now()}.${ext}`;
+  const { error } = await supabase.storage.from("documents").upload(path, file, {
+    cacheControl: "3600",
+    upsert: true,
+    contentType: file.type || "image/jpeg",
+  });
+  if (error) return null;
+  return path;
+}
+
+export async function getDocumentUrl(path: string): Promise<string | null> {
+  const { data } = await supabase.storage.from("documents").createSignedUrl(path, 60 * 60);
+  return data?.signedUrl ?? null;
 }
 
 export type Scan = { id: string; value: string; at: string };
