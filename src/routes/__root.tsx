@@ -110,31 +110,53 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { useRouter as useTanRouter } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+
+const PUBLIC_PATHS = new Set(["/login", "/setup"]);
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const router = useTanRouter();
   const pathname = router.state.location.pathname;
+  const [routing, setRouting] = useState(false);
 
   useEffect(() => {
     if (loading) return;
-    if (!user && pathname !== "/login") {
-      router.navigate({ to: "/login" });
+    if (!user) {
+      if (!PUBLIC_PATHS.has(pathname)) router.navigate({ to: "/login" });
+      return;
     }
-    if (user && pathname === "/login") {
-      router.navigate({ to: "/" });
-    }
+    // Logged in: decide where to land
+    let cancelled = false;
+    setRouting(true);
+    (async () => {
+      const [{ data: role }, { data: veh }] = await Promise.all([
+        supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle(),
+        supabase.from("vehicles").select("matricule").eq("user_id", user.id).maybeSingle(),
+      ]);
+      if (cancelled) return;
+      const isAdmin = !!role;
+      const hasVehicle = !!veh && !!veh.matricule;
+
+      if (PUBLIC_PATHS.has(pathname)) {
+        router.navigate({ to: isAdmin ? "/admin" : hasVehicle ? "/" : "/vehicule" });
+      } else if (!isAdmin && !hasVehicle && pathname !== "/vehicule") {
+        router.navigate({ to: "/vehicule" });
+      }
+      setRouting(false);
+    })();
+    return () => { cancelled = true; };
   }, [user, loading, pathname, router]);
 
-  if (loading) {
+  if (loading || routing) {
     return (
       <div className="min-h-screen grid place-items-center bg-background">
         <div className="text-muted-foreground text-sm">Chargement…</div>
       </div>
     );
   }
-  if (!user && pathname !== "/login") return null;
+  if (!user && !PUBLIC_PATHS.has(pathname)) return null;
   return <>{children}</>;
 }
 
