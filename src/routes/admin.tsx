@@ -150,11 +150,13 @@ function UsersTab() {
       setUsers(u);
       setBrands(b);
       if (!brand && b[0]) setBrand(b[0].name);
+    } catch (e) {
+      console.error("admin refresh failed", e);
     } finally {
       setLoading(false);
     }
   };
-  useEffect(() => { refresh(); }, []);
+  useEffect(() => { refresh().catch((e) => console.error(e)); }, []);
 
   useEffect(() => {
     if (!brand) { setModels([]); setModel(""); return; }
@@ -463,7 +465,9 @@ function BrandsTab() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  const refresh = async () => setBrands(await list());
+  const refresh = async () => {
+    try { setBrands(await list()); } catch (e) { console.error(e); }
+  };
   useEffect(() => { refresh(); }, []);
 
   const submit = async (e: React.FormEvent) => {
@@ -533,7 +537,7 @@ function ModelsTab() {
     fetchBrands().then((b) => {
       setBrands(b);
       if (!brandId && b[0]) setBrandId(b[0].id);
-    });
+    }).catch((e) => console.error(e));
   }, []);
 
   const refresh = async () => {
@@ -541,7 +545,7 @@ function ModelsTab() {
     const m = await fetchModels({ data: { brandId } });
     setModels(m);
   };
-  useEffect(() => { refresh(); }, [brandId]);
+  useEffect(() => { refresh().catch((e) => console.error(e)); }, [brandId]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
