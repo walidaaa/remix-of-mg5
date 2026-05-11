@@ -120,7 +120,7 @@ export const adminCreateUser = createServerFn({ method: "POST" })
       await supabaseAdmin.from("vehicles").upsert({
         user_id: created.user.id,
         marque: data.brand,
-        modele: "",
+        modele: data.model ?? "",
         couleur: "",
         matricule: "",
         transmission: "automatique",
