@@ -350,14 +350,34 @@ function UsersTab() {
 
 function VehiclesTab() {
   const list = useServerFn(adminListAllVehicles);
+  const getDetails = useServerFn(adminGetUserData);
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [details, setDetails] = useState<Record<string, any>>({});
+  const [loadingDetails, setLoadingDetails] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
-    list().then((r) => setRows(r as any[])).finally(() => setLoading(false));
+    list().then((r) => setRows(r as any[])).catch((e) => console.error(e)).finally(() => setLoading(false));
   }, []);
+
+  const toggle = async (userId: string) => {
+    if (openId === userId) { setOpenId(null); return; }
+    setOpenId(userId);
+    if (!details[userId]) {
+      setLoadingDetails(userId);
+      try {
+        const d = await getDetails({ data: { userId } });
+        setDetails((prev) => ({ ...prev, [userId]: d }));
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoadingDetails(null);
+      }
+    }
+  };
 
   const fmtDate = (d: string | null) => d ? new Date(d).toLocaleDateString("fr-FR") : "—";
   const filtered = rows.filter((v) => {
@@ -372,7 +392,7 @@ function VehiclesTab() {
   return (
     <div className="grid gap-4">
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="text-sm text-muted-foreground">{filtered.length} véhicule(s)</div>
+        <div className="text-sm text-muted-foreground">{filtered.length} véhicule(s) — cliquez pour voir tous les détails</div>
         <input
           value={q} onChange={(e) => setQ(e.target.value)}
           placeholder="Rechercher (marque, modèle, matricule, propriétaire)…"
@@ -384,6 +404,7 @@ function VehiclesTab() {
         <Table>
           <TableHeader className="bg-secondary/50">
             <TableRow>
+              <TableHead className="w-8"></TableHead>
               <TableHead>Propriétaire</TableHead>
               <TableHead>Marque / Modèle</TableHead>
               <TableHead>Matricule</TableHead>
@@ -392,62 +413,112 @@ function VehiclesTab() {
               <TableHead>Trans.</TableHead>
               <TableHead>KM</TableHead>
               <TableHead>Interv.</TableHead>
-              <TableHead>Dernière vidange</TableHead>
               <TableHead>Vidanges</TableHead>
-              <TableHead>Assurance</TableHead>
               <TableHead>Entretiens</TableHead>
-              <TableHead>Créé le</TableHead>
+              <TableHead>Assurance</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.map((v) => {
               const overdue = (v.km_actuel ?? 0) >= (v.intervalle_vidange ?? 10000);
+              const open = openId === v.user_id;
+              const d = details[v.user_id];
               return (
-                <TableRow key={v.user_id}>
-                  <TableCell>
-                    <div className="font-medium">{v.owner?.username ?? "—"}</div>
-                    <div className="text-xs text-muted-foreground">{v.owner?.display_name ?? ""}</div>
-                    {v.owner?.blocked && (
-                      <span className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded bg-destructive/15 text-destructive mt-1">
-                        <Lock size={10} /> Bloqué
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell className="font-medium">{v.marque} {v.modele}</TableCell>
-                  <TableCell>{v.matricule || "—"}</TableCell>
-                  <TableCell>{v.annee}</TableCell>
-                  <TableCell>{v.couleur || "—"}</TableCell>
-                  <TableCell className="capitalize text-xs">{v.transmission}</TableCell>
-                  <TableCell className={overdue ? "text-destructive font-semibold" : ""}>
-                    {(v.km_actuel ?? 0).toLocaleString("fr-FR")}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{(v.intervalle_vidange ?? 10000).toLocaleString("fr-FR")}</TableCell>
-                  <TableCell className="text-xs">
-                    {v.last_oil ? (
-                      <>
-                        <div>{fmtDate(v.last_oil.date)}</div>
-                        <div className="text-muted-foreground">{v.last_oil.km?.toLocaleString("fr-FR")} km · {v.last_oil.type_huile}</div>
-                      </>
-                    ) : "—"}
-                  </TableCell>
-                  <TableCell>{v.oil_count}</TableCell>
-                  <TableCell className="text-xs">
-                    {v.insurance ? (
-                      <>
-                        <div className="font-medium">{v.insurance.compagnie || "—"}</div>
-                        <div className="text-muted-foreground">{v.insurance.numero_police || ""}</div>
-                        <div className="text-muted-foreground">{fmtDate(v.insurance.date_debut)} → {fmtDate(v.insurance.date_fin)}</div>
-                      </>
-                    ) : "—"}
-                  </TableCell>
-                  <TableCell>{v.maintenance_count}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{fmtDate(v.created_at)}</TableCell>
-                </TableRow>
+                <>
+                  <TableRow key={v.user_id} className="cursor-pointer hover:bg-secondary/30" onClick={() => toggle(v.user_id)}>
+                    <TableCell>{open ? <ChevronDown size={16} /> : <ChevronRight size={16} />}</TableCell>
+                    <TableCell>
+                      <div className="font-medium">{v.owner?.username ?? "—"}</div>
+                      <div className="text-xs text-muted-foreground">{v.owner?.display_name ?? ""}</div>
+                      {v.owner?.blocked && (
+                        <span className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded bg-destructive/15 text-destructive mt-1">
+                          <Lock size={10} /> Bloqué
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="font-medium">{v.marque} {v.modele}</TableCell>
+                    <TableCell>{v.matricule || "—"}</TableCell>
+                    <TableCell>{v.annee}</TableCell>
+                    <TableCell>{v.couleur || "—"}</TableCell>
+                    <TableCell className="capitalize text-xs">{v.transmission}</TableCell>
+                    <TableCell className={overdue ? "text-destructive font-semibold" : ""}>
+                      {(v.km_actuel ?? 0).toLocaleString("fr-FR")}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{(v.intervalle_vidange ?? 10000).toLocaleString("fr-FR")}</TableCell>
+                    <TableCell>{v.oil_count}</TableCell>
+                    <TableCell>{v.maintenance_count}</TableCell>
+                    <TableCell className="text-xs">
+                      {v.insurance ? (
+                        <>
+                          <div className="font-medium">{v.insurance.compagnie || "—"}</div>
+                          <div className="text-muted-foreground">→ {fmtDate(v.insurance.date_fin)}</div>
+                        </>
+                      ) : "—"}
+                    </TableCell>
+                  </TableRow>
+                  {open && (
+                    <TableRow key={v.user_id + "-d"} className="bg-secondary/20 hover:bg-secondary/20">
+                      <TableCell colSpan={12} className="p-0">
+                        <div className="p-5">
+                          {loadingDetails === v.user_id || !d ? (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 size={14} className="animate-spin" /> Chargement…</div>
+                          ) : (
+                            <div className="grid md:grid-cols-3 gap-5">
+                              {/* Vidanges */}
+                              <div>
+                                <h4 className="text-sm font-semibold flex items-center gap-1.5 mb-2"><Droplet size={14} className="text-accent" /> Vidanges ({d.oilChanges.length})</h4>
+                                {d.oilChanges.length === 0 ? <div className="text-xs text-muted-foreground">Aucune</div> : (
+                                  <ul className="space-y-2 text-xs max-h-72 overflow-y-auto pr-2">
+                                    {d.oilChanges.map((o: any) => (
+                                      <li key={o.id} className="rounded-md bg-card border border-border p-2">
+                                        <div className="flex items-center justify-between"><span className="font-medium">{fmtDate(o.date)}</span><span className="text-muted-foreground">{o.km?.toLocaleString("fr-FR")} km</span></div>
+                                        <div className="text-muted-foreground">Huile: {o.type_huile || "—"}{o.filtre_huile ? ` · Filtre: ${o.filtre_huile}` : ""}</div>
+                                        {o.cout != null && <div className="text-muted-foreground">Coût: {o.cout} DA</div>}
+                                        {o.notes && <div className="text-muted-foreground italic">{o.notes}</div>}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </div>
+                              {/* Entretiens */}
+                              <div>
+                                <h4 className="text-sm font-semibold flex items-center gap-1.5 mb-2"><Wrench size={14} className="text-primary" /> Entretiens ({d.maintenance.length})</h4>
+                                {d.maintenance.length === 0 ? <div className="text-xs text-muted-foreground">Aucun</div> : (
+                                  <ul className="space-y-2 text-xs max-h-72 overflow-y-auto pr-2">
+                                    {d.maintenance.map((m: any) => (
+                                      <li key={m.id} className="rounded-md bg-card border border-border p-2">
+                                        <div className="flex items-center justify-between"><span className="font-medium capitalize">{m.type}</span><span className="text-muted-foreground">{fmtDate(m.date)}</span></div>
+                                        <div className="text-muted-foreground">{m.km?.toLocaleString("fr-FR")} km{m.intervalle_km ? ` · int. ${m.intervalle_km.toLocaleString("fr-FR")} km` : ""}{m.intervalle_mois ? ` · ${m.intervalle_mois} mois` : ""}</div>
+                                        {m.cout != null && <div className="text-muted-foreground">Coût: {m.cout} DA</div>}
+                                        {m.notes && <div className="text-muted-foreground italic">{m.notes}</div>}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </div>
+                              {/* Assurance */}
+                              <div>
+                                <h4 className="text-sm font-semibold flex items-center gap-1.5 mb-2"><ShieldCheck size={14} className="text-success" /> Assurance</h4>
+                                {!d.insurance ? <div className="text-xs text-muted-foreground">Aucune</div> : (
+                                  <div className="rounded-md bg-card border border-border p-3 text-xs space-y-1">
+                                    <div><span className="text-muted-foreground">Compagnie:</span> <span className="font-medium">{d.insurance.compagnie || "—"}</span></div>
+                                    <div><span className="text-muted-foreground">N° police:</span> {d.insurance.numero_police || "—"}</div>
+                                    <div className="flex items-center gap-1.5"><Calendar size={12} className="text-muted-foreground" /> {fmtDate(d.insurance.date_debut)} → {fmtDate(d.insurance.date_fin)}</div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </>
               );
             })}
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={13} className="text-center text-muted-foreground py-8">Aucun véhicule</TableCell>
+                <TableCell colSpan={12} className="text-center text-muted-foreground py-8">Aucun véhicule</TableCell>
               </TableRow>
             )}
           </TableBody>
