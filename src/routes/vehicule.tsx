@@ -22,6 +22,7 @@ export const Route = createFileRoute("/vehicule")({
 
 function VehiclePage() {
   const data = useAppData();
+  const { t } = useLang();
   const [showAll, setShowAll] = useState(false);
   const [editing, setEditing] = useState(false);
   const { isAdmin, checked } = useIsAdmin();
