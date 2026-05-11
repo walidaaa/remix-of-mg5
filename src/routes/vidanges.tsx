@@ -53,6 +53,8 @@ function OilChangesPage() {
     setForm((f) => ({ ...f, filtreHuile: "", cout: "", notes: "" }));
   };
 
+  if (checked && isAdmin) return <AdminOverview view="oil" />;
+
   return (
     <AppShell>
       <div className="flex items-center justify-between mb-8 gap-4 flex-wrap">
