@@ -343,9 +343,9 @@ function FullDataModal({ data, onClose }: { data: ReturnType<typeof useAppData>;
 
           <Section icon={Coins} title={t("veh.section.costs")} tone="success">
             <Grid>
-              <Info label={t("veh.costs.oil")} value={`${totalOil.toLocaleString("fr-FR")} DH`} />
-              <Info label={t("veh.costs.maint")} value={`${totalMaint.toLocaleString("fr-FR")} DH`} />
-              <Info label={t("veh.costs.total")} value={`${total.toLocaleString("fr-FR")} DH`} highlight />
+              <Info label={t("veh.costs.oil")} value={`${totalOil.toLocaleString("fr-FR")} DA`} />
+              <Info label={t("veh.costs.maint")} value={`${totalMaint.toLocaleString("fr-FR")} DA`} />
+              <Info label={t("veh.costs.total")} value={`${total.toLocaleString("fr-FR")} DA`} highlight />
             </Grid>
           </Section>
 
@@ -376,7 +376,7 @@ function FullDataModal({ data, onClose }: { data: ReturnType<typeof useAppData>;
                       <span className="px-2 py-0.5 rounded bg-primary/15 text-primary text-xs">{o.typeHuile}</span>
                       {o.filtreHuile && <span className="text-xs text-muted-foreground">{t("dash.field.filter")}: {o.filtreHuile}</span>}
                     </div>
-                    <span className="font-mono text-sm">{o.cout != null ? `${o.cout} DH` : "—"}</span>
+                    <span className="font-mono text-sm">{o.cout != null ? `${o.cout} DA` : "—"}</span>
                   </div>
                 ))}
               </div>
@@ -394,7 +394,7 @@ function FullDataModal({ data, onClose }: { data: ReturnType<typeof useAppData>;
                         <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Calendar size={11} />{new Date(m.date).toLocaleDateString("fr-FR")}</span>
                         <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Gauge size={11} />{m.km.toLocaleString("fr-FR")} {t("common.km")}</span>
                       </div>
-                      <span className="font-mono text-sm">{m.cout != null ? `${m.cout} DH` : "—"}</span>
+                      <span className="font-mono text-sm">{m.cout != null ? `${m.cout} DA` : "—"}</span>
                     </div>
                   );
                 })}

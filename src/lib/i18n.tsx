@@ -83,7 +83,7 @@ const DICT = {
     "oil.kmLockedHelp": "Le kilométrage est repris automatiquement du véhicule. Pour le modifier, utilisez « Mise à jour du kilométrage » dans le Tableau.",
     "oil.oilType": "Type d'huile",
     "oil.filterLabel": "Filtre à huile",
-    "oil.cost": "Coût (DH)",
+    "oil.cost": "Coût (DA)",
     "oil.notes": "Notes",
     "oil.setupFirst": "Configurez d'abord votre véhicule.",
 
