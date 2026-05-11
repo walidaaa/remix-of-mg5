@@ -28,6 +28,17 @@ export type Insurance = {
   numeroPolice: string;
   dateDebut: string;
   dateFin: string;
+  cout?: number;
+  scanUrl?: string;
+};
+
+export type Vignette = {
+  compagnie: string;
+  numero: string;
+  dateDebut: string;
+  dateFin: string;
+  cout?: number;
+  scanUrl?: string;
 };
 
 export type MaintenanceType =
