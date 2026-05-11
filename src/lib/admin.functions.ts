@@ -91,10 +91,11 @@ export const setupFirstAdmin = createServerFn({ method: "POST" })
 // Admin: create a regular user
 export const adminCreateUser = createServerFn({ method: "POST" })
   .middleware([attachSupabaseAuth, requireSupabaseAuth])
-  .inputValidator((d: { username: string; password: string; brand?: string }) => ({
+  .inputValidator((d: { username: string; password: string; brand?: string; model?: string }) => ({
     username: usernameSchema.parse(d.username),
     password: passwordSchema.parse(d.password),
     brand: d.brand ? z.string().trim().max(50).parse(d.brand) : undefined,
+    model: d.model ? z.string().trim().max(80).parse(d.model) : undefined,
   }))
   .handler(async ({ data, context }) => {
     await ensureAdmin(context.userId);
