@@ -209,12 +209,18 @@ function VehiclePage() {
           />
         </Field>
 
-        <div className="md:col-span-2 flex justify-end">
+        <div className="md:col-span-2 flex justify-end gap-2">
+          {v && (
+            <button type="button" onClick={() => { setEditing(false); setForm(v); }} className="inline-flex items-center gap-2 bg-secondary text-foreground px-5 py-3 rounded-lg font-semibold hover:opacity-90">
+              Annuler
+            </button>
+          )}
           <button className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold shadow-glow hover:opacity-90">
             <Save size={18} /> Enregistrer
           </button>
         </div>
       </form>
+      )}
 
       <style>{`
         .input {
