@@ -449,7 +449,7 @@ function DocumentCard({
         <div className="rounded-lg bg-secondary/40 border border-border/50 px-3 py-2 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-xs text-muted-foreground min-w-0">
             <ImageIcon size={14} className="text-primary shrink-0" />
-            <span className="truncate">{previewUrl ? "Document disponible" : "Aucun document"}</span>
+            <span className="truncate">{previewUrl ? t("ins.scan.has") : t("ins.scan.none")}</span>
           </div>
           <div className="flex gap-1.5">
             <input ref={camRef} type="file" accept="image/*" capture="environment" hidden onChange={(e) => onFile(e.target.files?.[0] ?? null)} />
@@ -459,9 +459,9 @@ function DocumentCard({
                 type="button"
                 onClick={() => setShowPreview(true)}
                 className="inline-flex items-center gap-1 bg-accent/20 text-accent-foreground border border-accent/30 px-2 py-1 rounded-md text-xs font-semibold hover:bg-accent/30"
-                title="Voir"
+                title={t("common.view")}
               >
-                <Eye size={12} /> Voir
+                <Eye size={12} /> {t("common.view")}
               </button>
             )}
             <button
@@ -469,18 +469,18 @@ function DocumentCard({
               onClick={() => camRef.current?.click()}
               disabled={uploading}
               className="inline-flex items-center gap-1 bg-primary text-primary-foreground px-2 py-1 rounded-md text-xs font-semibold disabled:opacity-50"
-              title="Scanner"
+              title={t("ins.scan.scan")}
             >
-              {uploading ? <Loader2 className="animate-spin" size={12} /> : <Camera size={12} />} Scan
+              {uploading ? <Loader2 className="animate-spin" size={12} /> : <Camera size={12} />} {t("ins.scan.scan")}
             </button>
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
               disabled={uploading}
               className="inline-flex items-center gap-1 bg-secondary text-foreground border border-border px-2 py-1 rounded-md text-xs font-semibold disabled:opacity-50"
-              title="Importer"
+              title={t("ins.scan.import")}
             >
-              <ImageIcon size={12} /> Import
+              <ImageIcon size={12} /> {t("ins.scan.import")}
             </button>
           </div>
         </div>
