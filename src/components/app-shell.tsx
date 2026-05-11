@@ -40,7 +40,27 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     : baseLinks;
 
   return (
-    <div className="min-h-screen pb-24 md:pb-0 md:pl-64">
+    <div className="min-h-screen pb-24 md:pb-0 md:pl-64 pt-14 md:pt-0">
+      {/* Mobile top bar */}
+      <header className="md:hidden fixed top-0 inset-x-0 z-40 h-14 bg-card/95 backdrop-blur border-b border-border flex items-center justify-between px-4">
+        <div className="flex items-baseline gap-2">
+          <span className="font-display text-xl text-primary leading-none">MG5</span>
+          <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Maintenance</span>
+        </div>
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-xs text-muted-foreground truncate max-w-[120px]">
+            {username ?? user?.email}
+          </span>
+          <button
+            onClick={() => signOut()}
+            aria-label="Déconnexion"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-secondary text-foreground hover:bg-secondary/80 text-xs font-medium"
+          >
+            <LogOut size={14} /> <span>Sortir</span>
+          </button>
+        </div>
+      </header>
+
       <aside className="hidden md:flex fixed left-0 top-0 h-screen w-64 flex-col border-r border-border bg-card/50 backdrop-blur p-6 gap-2">
         <div className="mb-8">
           <div className="font-display text-3xl text-primary">MG5</div>
@@ -79,7 +99,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <main className="px-4 md:px-10 py-6 md:py-10 max-w-5xl mx-auto">{children}</main>
 
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-card/95 backdrop-blur border-t border-border">
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-card/95 backdrop-blur border-t border-border pb-[env(safe-area-inset-bottom)]">
         <div className={`grid ${links.length === 6 ? "grid-cols-6" : "grid-cols-5"}`}>
           {links.map((l) => {
             const active = pathname === l.to;
