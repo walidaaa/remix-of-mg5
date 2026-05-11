@@ -380,17 +380,16 @@ export const adminDeleteBrand = createServerFn({ method: "POST" })
 
 // Models
 export const listModels = createServerFn({ method: "POST" })
-  .middleware([attachSupabaseAuth, requireSupabaseAuth])
   .inputValidator((d: { brandId?: string; brandName?: string }) => d)
-  .handler(async ({ data, context }) => {
+  .handler(async ({ data }) => {
     let brandId = data.brandId;
     if (!brandId && data.brandName) {
-      const { data: b } = await context.supabase
+      const { data: b } = await supabaseAdmin
         .from("car_brands").select("id").eq("name", data.brandName).maybeSingle();
       brandId = b?.id;
     }
     if (!brandId) return [];
-    const { data: rows, error } = await context.supabase
+    const { data: rows, error } = await supabaseAdmin
       .from("car_models").select("id, name, brand_id").eq("brand_id", brandId).order("name");
     if (error) throw new Error(error.message);
     return rows ?? [];
