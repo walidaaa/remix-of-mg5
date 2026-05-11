@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { RotateCcw } from "lucide-react";
 import { Car, Droplet, AlertTriangle, CheckCircle2, Gauge, Settings2, Palette, Wrench, ShieldCheck, Calendar, ArrowRight } from "lucide-react";
 import { useState } from "react";
-import mg5Photo from "@/assets/mg5-exterior.jpg";
+import { getBrandImage } from "@/lib/brand-images";
 
 export const Route = createFileRoute("/")({
   head: () => ({
