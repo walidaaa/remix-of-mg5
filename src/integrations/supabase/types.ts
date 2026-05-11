@@ -165,18 +165,21 @@ export type Database = {
       }
       profiles: {
         Row: {
+          blocked: boolean
           created_at: string
           display_name: string | null
           id: string
           username: string | null
         }
         Insert: {
+          blocked?: boolean
           created_at?: string
           display_name?: string | null
           id: string
           username?: string | null
         }
         Update: {
+          blocked?: boolean
           created_at?: string
           display_name?: string | null
           id?: string
