@@ -80,6 +80,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "MG5 Maintenance" },
+      { name: "twitter:description", content: "Suivi vidange, kilométrage, assurance et scanner pour votre MG5." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/3e4a0e85-39ae-4045-bdf2-2442530834d7/id-preview-54034906--1b162335-a8e8-4c85-a29f-bff5d252a925.lovable.app-1778495714546.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/3e4a0e85-39ae-4045-bdf2-2442530834d7/id-preview-54034906--1b162335-a8e8-4c85-a29f-bff5d252a925.lovable.app-1778495714546.png" },
     ],
     links: [
       {
@@ -120,18 +124,14 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   const router = useTanRouter();
   const pathname = router.state.location.pathname;
   const [routing, setRouting] = useState(false);
-  const [decidedFor, setDecidedFor] = useState<string | null>(null);
 
   useEffect(() => {
     if (loading) return;
     if (!user) {
-      setDecidedFor(null);
       if (!PUBLIC_PATHS.has(pathname)) router.navigate({ to: "/login" });
       return;
     }
-    // Only run landing decision once per user session, OR when on a public path.
-    if (decidedFor === user.id && !PUBLIC_PATHS.has(pathname)) return;
-
+    // Logged in: decide where to land
     let cancelled = false;
     setRouting(true);
     (async () => {
@@ -148,11 +148,10 @@ function AuthGate({ children }: { children: React.ReactNode }) {
       } else if (!isAdmin && !hasVehicle && pathname !== "/vehicule") {
         router.navigate({ to: "/vehicule" });
       }
-      setDecidedFor(user.id);
       setRouting(false);
     })();
     return () => { cancelled = true; };
-  }, [user, loading, pathname, router, decidedFor]);
+  }, [user, loading, pathname, router]);
 
   if (loading || routing) {
     return (
