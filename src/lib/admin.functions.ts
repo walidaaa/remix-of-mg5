@@ -262,6 +262,29 @@ export const adminListAllVehicles = createServerFn({ method: "GET" })
     }));
   });
 
+// Admin: full data for a single user (vehicle, oil changes, maintenance, insurance)
+export const adminGetUserData = createServerFn({ method: "POST" })
+  .middleware([attachSupabaseAuth, requireSupabaseAuth])
+  .inputValidator((d: { userId: string }) => ({ userId: z.string().uuid().parse(d.userId) }))
+  .handler(async ({ data, context }) => {
+    await ensureAdmin(context.userId);
+    const uid = data.userId;
+    const [{ data: vehicle }, { data: oils }, { data: maint }, { data: ins }, { data: profile }] = await Promise.all([
+      supabaseAdmin.from("vehicles").select("*").eq("user_id", uid).maybeSingle(),
+      supabaseAdmin.from("oil_changes").select("*").eq("user_id", uid).order("date", { ascending: false }),
+      supabaseAdmin.from("maintenance_items").select("*").eq("user_id", uid).order("date", { ascending: false }),
+      supabaseAdmin.from("insurance").select("*").eq("user_id", uid).maybeSingle(),
+      supabaseAdmin.from("profiles").select("id, username, display_name, blocked").eq("id", uid).maybeSingle(),
+    ]);
+    return {
+      profile: profile ?? null,
+      vehicle: vehicle ?? null,
+      oilChanges: oils ?? [],
+      maintenance: maint ?? [],
+      insurance: ins ?? null,
+    };
+  });
+
 // Brands
 export const listBrands = createServerFn({ method: "GET" })
   .middleware([attachSupabaseAuth, requireSupabaseAuth])
