@@ -153,8 +153,16 @@ function OilChangesPage() {
             <Row label="Date">
               <input type="date" required value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="input" />
             </Row>
-            <Row label="Kilométrage">
-              <input type="number" required value={form.km} onChange={(e) => setForm({ ...form, km: Number(e.target.value) })} className="input" />
+            <Row label="Kilométrage actuel (verrouillé)">
+              <input
+                type="text"
+                value={`${(data.vehicle?.kmActuel ?? 0).toLocaleString("fr-FR")} km`}
+                readOnly
+                className="input opacity-80 cursor-not-allowed font-mono"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Le kilométrage est repris automatiquement du véhicule. Pour le modifier, utilisez « Mise à jour du kilométrage » dans le Tableau.
+              </p>
             </Row>
             <Row label="Type d'huile">
               <input list="oils" required value={form.typeHuile} onChange={(e) => setForm({ ...form, typeHuile: e.target.value })} className="input" />
