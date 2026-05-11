@@ -219,7 +219,28 @@ function RecapRow({
   );
 }
 
-type DocKind = "assurance" | "vignette";
+type DocKind = "assurance" | "vignette" | "vehicle";
+
+const REF1_KEY: Record<DocKind, string> = {
+  assurance: "compagnie",
+  vignette: "compagnie",
+  vehicle: "organisme",
+};
+const REF2_KEY: Record<DocKind, string> = {
+  assurance: "numeroPolice",
+  vignette: "numero",
+  vehicle: "numero",
+};
+const REF1_LABEL: Record<DocKind, string> = {
+  assurance: "Compagnie",
+  vignette: "Agence vignette",
+  vehicle: "Organisme",
+};
+const REF2_LABEL: Record<DocKind, string> = {
+  assurance: "N° police",
+  vignette: "N° vignette",
+  vehicle: "N° immatriculation / carte",
+};
 
 function DocumentCard({
   kind,
@@ -232,7 +253,7 @@ function DocumentCard({
   kind: DocKind;
   title: string;
   icon: any;
-  value: Insurance | Vignette | null;
+  value: Insurance | Vignette | VehicleDoc | null;
   status: "ok" | "bientot" | "expiree" | null;
   j: number | null;
 }) {
@@ -244,26 +265,16 @@ function DocumentCard({
   const fileRef = useRef<HTMLInputElement>(null);
   const camRef = useRef<HTMLInputElement>(null);
 
-  const baseInsurance: Insurance = {
-    compagnie: "",
-    numeroPolice: "",
-    dateDebut: new Date().toISOString().slice(0, 10),
-    dateFin: "",
-    cout: undefined,
-    scanUrl: undefined,
-  };
-  const baseVignette: Vignette = {
-    compagnie: "",
-    numero: "",
+  const baseForm: any = {
+    [REF1_KEY[kind]]: "",
+    [REF2_KEY[kind]]: "",
     dateDebut: new Date().toISOString().slice(0, 10),
     dateFin: "",
     cout: undefined,
     scanUrl: undefined,
   };
 
-  const [form, setForm] = useState<Insurance | Vignette>(
-    (value as any) ?? (kind === "assurance" ? baseInsurance : baseVignette),
-  );
+  const [form, setForm] = useState<any>((value as any) ?? baseForm);
 
   useEffect(() => {
     if (value) setForm(value as any);
@@ -279,6 +290,12 @@ function DocumentCard({
 
   const set = (k: string, v: any) => setForm((f: any) => ({ ...f, [k]: v }));
 
+  const persist = async (next: any) => {
+    if (kind === "assurance") await updateInsurance(next as Insurance);
+    else if (kind === "vignette") await updateVignette(next as Vignette);
+    else await updateVehicleDoc(next as VehicleDoc);
+  };
+
   const onFile = async (file: File | null) => {
     if (!file) return;
     setUploading(true);
@@ -287,8 +304,7 @@ function DocumentCard({
       if (path) {
         const next: any = { ...form, scanUrl: path };
         setForm(next);
-        if (kind === "assurance") await updateInsurance(next);
-        else await updateVignette(next);
+        await persist(next);
       }
     } finally {
       setUploading(false);
@@ -300,20 +316,18 @@ function DocumentCard({
     if (saving) return;
     setSaving(true);
     try {
-      if (kind === "assurance") await updateInsurance(form as Insurance);
-      else await updateVignette(form as Vignette);
+      await persist(form);
       setEditing(false);
     } finally {
       setSaving(false);
     }
   };
 
-  const dateDebut = (form as any).dateDebut as string;
-  const dateFin = (form as any).dateFin as string;
-  const cout = (form as any).cout as number | undefined;
-  const ref1 = kind === "assurance" ? (form as Insurance).compagnie : (form as Vignette).compagnie;
-  const ref2Key = kind === "assurance" ? "numeroPolice" : "numero";
-  const ref2 = (form as any)[ref2Key];
+  const dateDebut = form.dateDebut as string;
+  const dateFin = form.dateFin as string;
+  const cout = form.cout as number | undefined;
+  const ref1 = form[REF1_KEY[kind]] ?? "";
+  const ref2 = form[REF2_KEY[kind]] ?? "";
 
   const ringClass =
     status === "expiree"
