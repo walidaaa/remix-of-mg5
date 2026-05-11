@@ -19,6 +19,7 @@ export const Route = createFileRoute("/assurance")({
 
 function InsurancePage() {
   const data = useAppData();
+  const { isAdmin, checked } = useIsAdmin();
   const ins = data.insurance;
   const [form, setForm] = useState<Insurance>(
     ins ?? {
