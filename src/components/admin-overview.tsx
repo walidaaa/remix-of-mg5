@@ -204,7 +204,7 @@ function Dashboard({ vehicles, oils, maint, ins }: any) {
 
       <div className="rounded-2xl gradient-card p-6 shadow-card mb-6">
         <h3 className="text-lg mb-4">Coût total enregistré</h3>
-        <div className="font-display text-4xl text-primary">{totalCost.toLocaleString("fr-FR")} <span className="text-base text-muted-foreground">DH</span></div>
+        <div className="font-display text-4xl text-primary">{totalCost.toLocaleString("fr-FR")} <span className="text-base text-muted-foreground">DA</span></div>
       </div>
 
       <h3 className="text-xl mb-4">Derniers véhicules</h3>
