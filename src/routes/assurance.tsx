@@ -409,13 +409,13 @@ function DocumentCard({
               <Field label={REF2_LABEL[kind]}>
                 <input value={ref2 || ""} onChange={(e) => set(REF2_KEY[kind], e.target.value)} className="input font-mono" />
               </Field>
-              <Field label="Date début">
+              <Field label={t("ins.field.start")}>
                 <input type="date" value={dateDebut} onChange={(e) => set("dateDebut", e.target.value)} className="input" />
               </Field>
-              <Field label="Date fin">
+              <Field label={t("ins.field.end")}>
                 <input type="date" required value={dateFin} onChange={(e) => set("dateFin", e.target.value)} className="input" />
               </Field>
-              <Field label="Coût (DA)">
+              <Field label={t("ins.field.cost")}>
                 <input
                   type="number"
                   value={cout ?? ""}
