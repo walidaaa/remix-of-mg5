@@ -1,5 +1,5 @@
-import { Link, useLocation } from "@tanstack/react-router";
-import { Car, Droplet, ShieldCheck, Gauge, Wrench, LogOut, ShieldUser } from "lucide-react";
+import { Link, useLocation, useRouterState } from "@tanstack/react-router";
+import { Car, Droplet, ShieldCheck, Gauge, Wrench, LogOut, ShieldUser, Loader2 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -109,7 +109,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      <main className="px-4 md:px-10 py-6 md:py-10 max-w-5xl mx-auto">{children}</main>
+      <RouteProgress />
+
+      <main key={pathname} className="px-4 md:px-10 py-6 md:py-10 max-w-5xl mx-auto animate-fade-in">
+        {!data.loaded ? <PageSkeleton /> : children}
+      </main>
 
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-card/95 backdrop-blur border-t border-border pb-[env(safe-area-inset-bottom)]">
         <div className={`grid ${links.length === 6 ? "grid-cols-6" : "grid-cols-5"}`}>
@@ -131,6 +135,39 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           })}
         </div>
       </nav>
+    </div>
+  );
+}
+
+function RouteProgress() {
+  const isLoading = useRouterState({ select: (s) => s.status === "pending" || s.isLoading });
+  return (
+    <div
+      aria-hidden
+      className={`fixed top-0 left-0 right-0 z-[60] h-0.5 transition-opacity duration-200 ${
+        isLoading ? "opacity-100" : "opacity-0"
+      }`}
+    >
+      <div className="h-full w-full bg-gradient-to-r from-primary/0 via-primary to-primary/0 animate-[shimmer_1.2s_linear_infinite]" />
+      <style>{`@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}`}</style>
+    </div>
+  );
+}
+
+function PageSkeleton() {
+  return (
+    <div className="grid gap-5 animate-fade-in">
+      <div className="flex items-center gap-3 text-muted-foreground text-sm">
+        <Loader2 className="animate-spin" size={16} /> Chargement…
+      </div>
+      <div className="h-8 w-48 rounded-lg bg-secondary/60 animate-pulse" />
+      <div className="h-4 w-72 rounded bg-secondary/40 animate-pulse" />
+      <div className="grid md:grid-cols-2 gap-4 mt-4">
+        <div className="h-32 rounded-2xl bg-secondary/40 animate-pulse" />
+        <div className="h-32 rounded-2xl bg-secondary/40 animate-pulse" />
+        <div className="h-32 rounded-2xl bg-secondary/40 animate-pulse" />
+        <div className="h-32 rounded-2xl bg-secondary/40 animate-pulse" />
+      </div>
     </div>
   );
 }
