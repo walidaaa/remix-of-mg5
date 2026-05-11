@@ -424,7 +424,7 @@ function VehiclesTab() {
               const open = openId === v.user_id;
               const d = details[v.user_id];
               return (
-                <>
+                <Fragment key={v.user_id}>
                   <TableRow key={v.user_id} className="cursor-pointer hover:bg-secondary/30" onClick={() => toggle(v.user_id)}>
                     <TableCell>{open ? <ChevronDown size={16} /> : <ChevronRight size={16} />}</TableCell>
                     <TableCell>
