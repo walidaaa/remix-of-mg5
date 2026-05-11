@@ -12,11 +12,12 @@ import { useState } from "react";
 import { Plus, Trash2, Wrench, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { useIsAdmin } from "@/lib/use-is-admin";
 import { AdminOverview } from "@/components/admin-overview";
+import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/entretien")({
   head: () => ({
     meta: [
-      { title: "Entretien — MG5 Maintenance" },
+      { title: "Entretien — Cars Maintenance" },
       { name: "description", content: "Suivi entretien : filtres, freins, pneus, batterie, courroie." },
     ],
   }),
@@ -26,6 +27,7 @@ export const Route = createFileRoute("/entretien")({
 function MaintenancePage() {
   const data = useAppData();
   const { isAdmin, checked } = useIsAdmin();
+  const { t } = useLang();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [type, setType] = useState<MaintenanceType>("filtre-air");
@@ -37,9 +39,9 @@ function MaintenancePage() {
     notes: "",
   });
 
-  const onTypeChange = (t: MaintenanceType) => {
-    setType(t);
-    const def = MAINTENANCE_LABELS[t];
+  const onTypeChange = (tp: MaintenanceType) => {
+    setType(tp);
+    const def = MAINTENANCE_LABELS[tp];
     setForm((f) => ({ ...f, intervalleKm: def.defaultKm, intervalleMois: def.defaultMois ?? 0 }));
   };
 
@@ -70,9 +72,9 @@ function MaintenancePage() {
     <AppShell>
       <div className="flex items-center justify-between mb-8 gap-4 flex-wrap">
         <div>
-          <h1 className="text-3xl">Entretien</h1>
+          <h1 className="text-3xl">{t("maint.title")}</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            {data.maintenance.length} opération{data.maintenance.length > 1 ? "s" : ""}
+            {data.maintenance.length} {data.maintenance.length > 1 ? t("maint.ops.plural") : t("maint.ops")}
           </p>
         </div>
         <button
@@ -80,19 +82,18 @@ function MaintenancePage() {
           disabled={!data.vehicle}
           className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-3 rounded-lg font-semibold shadow-glow hover:opacity-90 disabled:opacity-50"
         >
-          <Plus size={18} /> Nouvelle opération
+          <Plus size={18} /> {t("maint.new")}
         </button>
       </div>
 
       {data.maintenance.length === 0 ? (
         <div className="rounded-2xl gradient-card p-10 text-center shadow-card">
           <Wrench className="mx-auto text-accent mb-3" size={40} />
-          <p className="text-muted-foreground">Aucune opération enregistrée.</p>
+          <p className="text-muted-foreground">{t("maint.empty")}</p>
         </div>
       ) : (
         <div className="grid md:grid-cols-2 gap-3">
           {data.maintenance.map((m) => {
-            const def = MAINTENANCE_LABELS[m.type];
             const st = getMaintenanceStatus(m, data.vehicle);
             const color =
               st.alerte === "depasse" ? "destructive"
@@ -113,21 +114,21 @@ function MaintenancePage() {
                     {color === "success" ? <CheckCircle2 size={20} /> : <AlertTriangle size={20} />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold">{def.label}</div>
+                    <div className="font-semibold">{t(`mt.${m.type}` as any)}</div>
                     <div className="text-xs text-muted-foreground">
-                      {new Date(m.date).toLocaleDateString("fr-FR")} · {m.km.toLocaleString("fr-FR")} km
+                      {new Date(m.date).toLocaleDateString("fr-FR")} · {m.km.toLocaleString("fr-FR")} {t("common.km")}
                     </div>
                     <div className="text-sm mt-2">
                       {st.kmRestants !== null && (
-                        <div>{st.kmRestants > 0 ? `${st.kmRestants.toLocaleString("fr-FR")} km restants` : `Dépassé de ${Math.abs(st.kmRestants).toLocaleString("fr-FR")} km`}</div>
+                        <div>{st.kmRestants > 0 ? `${st.kmRestants.toLocaleString("fr-FR")} ${t("maint.kmRemaining")}` : `${t("maint.kmOver")} ${Math.abs(st.kmRestants).toLocaleString("fr-FR")} ${t("common.km")}`}</div>
                       )}
                       {st.joursRestants !== null && (
-                        <div>{st.joursRestants > 0 ? `${st.joursRestants} jours restants` : `Expiré depuis ${Math.abs(st.joursRestants)} j`}</div>
+                        <div>{st.joursRestants > 0 ? `${st.joursRestants} ${t("maint.daysRemaining")}` : `${t("maint.daysOver")} ${Math.abs(st.joursRestants)} ${t("common.days")}`}</div>
                       )}
                     </div>
                     {m.notes && <div className="text-xs text-muted-foreground mt-2">{m.notes}</div>}
                   </div>
-                  <button onClick={() => confirm("Supprimer ?") && deleteMaintenance(m.id)} className="text-muted-foreground hover:text-destructive p-1">
+                  <button onClick={() => confirm(t("common.confirmDelete")) && deleteMaintenance(m.id)} className="text-muted-foreground hover:text-destructive p-1">
                     <Trash2 size={16} />
                   </button>
                 </div>
@@ -144,52 +145,52 @@ function MaintenancePage() {
             onSubmit={submit}
             className="bg-card w-full md:max-w-lg rounded-t-2xl md:rounded-2xl p-6 shadow-card grid gap-4 max-h-[90vh] overflow-y-auto"
           >
-            <h2 className="text-2xl">Nouvelle opération</h2>
+            <h2 className="text-2xl">{t("maint.new")}</h2>
             <label className="block">
-              <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Type</div>
+              <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">{t("maint.type")}</div>
               <select value={type} onChange={(e) => onTypeChange(e.target.value as MaintenanceType)} className="input">
-                {Object.entries(MAINTENANCE_LABELS).map(([k, v]) => (
-                  <option key={k} value={k}>{v.label}</option>
+                {Object.keys(MAINTENANCE_LABELS).map((k) => (
+                  <option key={k} value={k}>{t(`mt.${k}` as any)}</option>
                 ))}
               </select>
             </label>
             <div className="grid grid-cols-2 gap-3">
               <label className="block">
-                <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Date</div>
+                <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">{t("oil.col.date")}</div>
                 <input type="date" required value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="input" />
               </label>
               <label className="block">
-                <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Kilométrage actuel (verrouillé)</div>
+                <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">{t("oil.kmLocked")}</div>
                 <input
                   type="text"
                   readOnly
-                  value={`${(data.vehicle?.kmActuel ?? 0).toLocaleString("fr-FR")} km`}
+                  value={`${(data.vehicle?.kmActuel ?? 0).toLocaleString("fr-FR")} ${t("common.km")}`}
                   className="input opacity-80 cursor-not-allowed font-mono"
                 />
               </label>
               <label className="block">
-                <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Intervalle (km)</div>
+                <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">{t("maint.intervalKm")}</div>
                 <input type="number" value={form.intervalleKm} onChange={(e) => setForm({ ...form, intervalleKm: Number(e.target.value) })} className="input" />
               </label>
               <label className="block">
-                <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Intervalle (mois)</div>
+                <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">{t("maint.intervalMonths")}</div>
                 <input type="number" value={form.intervalleMois} onChange={(e) => setForm({ ...form, intervalleMois: Number(e.target.value) })} className="input" />
               </label>
             </div>
             <p className="text-xs text-muted-foreground -mt-2">
-              Le kilométrage est repris automatiquement du véhicule. Mettez-le à jour depuis le Tableau ou la page Véhicule.
+              {t("maint.kmHelp")}
             </p>
             <label className="block">
-              <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Coût (DA)</div>
+              <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">{t("maint.cost")}</div>
               <input type="number" value={form.cout} onChange={(e) => setForm({ ...form, cout: e.target.value })} className="input" />
             </label>
             <label className="block">
-              <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Notes</div>
+              <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">{t("oil.notes")}</div>
               <textarea rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="input" />
             </label>
             <div className="flex gap-2 justify-end pt-2">
-              <button type="button" onClick={() => setOpen(false)} className="px-4 py-2 rounded-lg bg-secondary">Annuler</button>
-              <button disabled={saving} className="px-5 py-2 rounded-lg bg-primary text-primary-foreground font-semibold disabled:opacity-50">{saving ? "Enregistrement…" : "Enregistrer"}</button>
+              <button type="button" onClick={() => setOpen(false)} className="px-4 py-2 rounded-lg bg-secondary">{t("common.cancel")}</button>
+              <button disabled={saving} className="px-5 py-2 rounded-lg bg-primary text-primary-foreground font-semibold disabled:opacity-50">{saving ? t("common.saving") : t("common.save")}</button>
             </div>
             <style>{`.input{width:100%;background:var(--color-input);border:1px solid var(--color-border);border-radius:.5rem;padding:.6rem .9rem;color:var(--color-foreground);outline:none}.input:focus{border-color:var(--color-ring)}`}</style>
           </form>

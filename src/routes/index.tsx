@@ -9,12 +9,13 @@ import { useState } from "react";
 import { getBrandImage } from "@/lib/brand-images";
 import { useIsAdmin } from "@/lib/use-is-admin";
 import { AdminOverview } from "@/components/admin-overview";
+import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "MG5 Maintenance — Tableau de bord" },
-      { name: "description", content: "Suivi vidange, entretien, assurance et alertes pour votre MG5." },
+      { title: "Cars Maintenance — Tableau de bord" },
+      { name: "description", content: "Suivi vidange, entretien, assurance et alertes." },
     ],
   }),
   component: Dashboard,
@@ -23,6 +24,7 @@ export const Route = createFileRoute("/")({
 function Dashboard() {
   const data = useAppData();
   const { isAdmin, checked } = useIsAdmin();
+  const { t, lang } = useLang();
   const v = data.vehicle;
   const next = getNextOilChange(data);
   const [km, setKm] = useState("");
@@ -48,15 +50,13 @@ function Dashboard() {
         <div className="rounded-2xl overflow-hidden shadow-card">
           <div className="relative h-64 md:h-80 bg-card" />
           <div className="p-8 text-center -mt-16 relative">
-            <h1 className="text-4xl mb-3">Bienvenue dans MG5 Maintenance</h1>
-            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Suivez vidanges, entretiens, assurance et alertes en un seul endroit.
-            </p>
+            <h1 className="text-4xl mb-3">{t("dash.welcome")}</h1>
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">{t("dash.welcomeSub")}</p>
             <Link
               to="/vehicule"
               className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold shadow-glow hover:opacity-90"
             >
-              Configurer mon véhicule <ArrowRight size={18} />
+              {t("dash.setupVehicle")} <ArrowRight size={18} />
             </Link>
           </div>
         </div>
@@ -68,7 +68,6 @@ function Dashboard() {
     next.alerte === "depasse" || next.alerte === "urgent" ? "destructive"
     : next.alerte === "bientot" ? "warning" : "success";
 
-  // alertes entretien
   const maintAlerts = data.maintenance
     .map((m) => ({ m, st: getMaintenanceStatus(m, v) }))
     .filter((x) => x.st.alerte !== "ok");
@@ -82,7 +81,6 @@ function Dashboard() {
 
   return (
     <AppShell>
-      {/* Hero with car photo */}
       <div className="relative rounded-2xl overflow-hidden shadow-card mb-6 bg-card">
         <div className="relative h-72 md:h-96">
           <img
@@ -106,39 +104,40 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Stats grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <StatCard icon={Gauge} label="Kilométrage" value={v.kmActuel.toLocaleString("fr-FR")} unit="km" tone="primary" />
-        <StatCard icon={Droplet} label="Prochaine vidange" value={next.kmRestants !== null ? `${Math.max(next.kmRestants, 0).toLocaleString("fr-FR")}` : "—"} unit="km" tone={oilColor} />
-        <StatCard icon={Wrench} label="Entretiens" value={String(data.maintenance.length)} unit="ops" tone="accent" />
+        <StatCard icon={Gauge} label={t("dash.km")} value={v.kmActuel.toLocaleString("fr-FR")} unit={t("common.km")} tone="primary" />
+        <StatCard icon={Droplet} label={t("dash.nextOil")} value={next.kmRestants !== null ? `${Math.max(next.kmRestants, 0).toLocaleString("fr-FR")}` : "—"} unit={t("common.km")} tone={oilColor} />
+        <StatCard icon={Wrench} label={t("dash.maintenances")} value={String(data.maintenance.length)} unit={t("dash.unit.ops")} tone="accent" />
         <StatCard
           icon={ShieldCheck}
-          label="Assurance"
-          value={insStatus ? (insStatus.j < 0 ? "Expirée" : `${insStatus.j} j`) : "—"}
+          label={t("dash.insurance")}
+          value={insStatus ? (insStatus.j < 0 ? t("dash.expired") : `${insStatus.j} ${t("common.days")}`) : "—"}
           unit=""
           tone={insStatus ? (insStatus.etat === "ok" ? "success" : insStatus.etat === "bientot" ? "warning" : "destructive") : "muted"}
         />
       </div>
 
-      {/* Alerte vidange */}
       <AlertBanner
         tone={oilColor}
         title={
-          next.alerte === "depasse" ? "Vidange en retard !"
-          : next.alerte === "urgent" ? "Vidange imminente"
-          : next.alerte === "bientot" ? "Vidange à prévoir"
-          : "Vidange à jour"
+          next.alerte === "depasse" ? t("dash.oil.late")
+          : next.alerte === "urgent" ? t("dash.oil.urgent")
+          : next.alerte === "bientot" ? t("dash.oil.soon")
+          : t("dash.oil.ok")
         }
         body={
           <>
-            Prochaine à <strong className="text-foreground">{next.prochainKm?.toLocaleString("fr-FR")} km</strong>
+            {t("dash.oil.next")} <strong className="text-foreground">{next.prochainKm?.toLocaleString("fr-FR")} {t("common.km")}</strong>
             {next.kmRestants !== null && (next.kmRestants > 0
-              ? <> · reste <strong className="text-foreground">{next.kmRestants.toLocaleString("fr-FR")} km</strong></>
-              : <> · dépassé de <strong className="text-foreground">{Math.abs(next.kmRestants).toLocaleString("fr-FR")} km</strong></>)}
+              ? <> · {t("dash.oil.remaining")} <strong className="text-foreground">{next.kmRestants.toLocaleString("fr-FR")} {t("common.km")}</strong></>
+              : <> · {t("dash.oil.over")} <strong className="text-foreground">{Math.abs(next.kmRestants).toLocaleString("fr-FR")} {t("common.km")}</strong></>)}
           </>
         }
-        cta={{ to: "/vidanges", label: "Gérer les vidanges" }}
+        cta={{ to: "/vidanges", label: t("dash.oil.manage") }}
         resetEnabled={next.kmRestants !== null && next.kmRestants <= 0}
+        resetLabel={t("dash.oil.reset")}
+        resetTip={t("dash.oil.resetTip")}
+        resetDisabledTip={t("dash.oil.resetDisabledTip")}
         onReset={async () => {
           const last = data.oilChanges[0];
           await addOilChange({
@@ -147,15 +146,14 @@ function Dashboard() {
             typeHuile: last?.typeHuile || "5W-30",
             filtreHuile: last?.filtreHuile || "",
           });
-          toast.success("Vidange enregistrée");
+          toast.success(t("dash.oil.toastSaved"));
         }}
       />
 
-      {/* Alertes entretien */}
       {maintAlerts.length > 0 && (
         <div className="rounded-2xl gradient-card p-6 mb-6 shadow-card">
           <h3 className="text-lg mb-4 flex items-center gap-2">
-            <AlertTriangle size={20} className="text-warning" /> Entretiens à prévoir
+            <AlertTriangle size={20} className="text-warning" /> {t("dash.maint.toDo")}
           </h3>
           <div className="space-y-2">
             {maintAlerts.slice(0, 4).map(({ m, st }) => {
@@ -163,14 +161,14 @@ function Dashboard() {
               return (
                 <div key={m.id} className={`flex items-center justify-between gap-3 p-3 rounded-lg ${tone === "warning" ? "bg-warning/10" : "bg-destructive/10"}`}>
                   <div className="min-w-0">
-                    <div className="font-medium truncate">{MAINTENANCE_LABELS[m.type].label}</div>
+                    <div className="font-medium truncate">{t(`mt.${m.type}` as any)}</div>
                     <div className="text-xs text-muted-foreground">
-                      {st.kmRestants !== null && <>{st.kmRestants > 0 ? `${st.kmRestants.toLocaleString("fr-FR")} km` : `Dépassé ${Math.abs(st.kmRestants).toLocaleString("fr-FR")} km`}</>}
+                      {st.kmRestants !== null && <>{st.kmRestants > 0 ? `${st.kmRestants.toLocaleString("fr-FR")} ${t("common.km")}` : `${t("maint.kmOver")} ${Math.abs(st.kmRestants).toLocaleString("fr-FR")} ${t("common.km")}`}</>}
                       {st.kmRestants !== null && st.joursRestants !== null && " · "}
-                      {st.joursRestants !== null && <>{st.joursRestants > 0 ? `${st.joursRestants} j` : `Expiré ${Math.abs(st.joursRestants)} j`}</>}
+                      {st.joursRestants !== null && <>{st.joursRestants > 0 ? `${st.joursRestants} ${t("common.days")}` : `${t("maint.daysOver")} ${Math.abs(st.joursRestants)} ${t("common.days")}`}</>}
                     </div>
                   </div>
-                  <Link to="/entretien" className="text-xs text-primary shrink-0">Voir →</Link>
+                  <Link to="/entretien" className="text-xs text-primary shrink-0">{t("dash.maint.see")}</Link>
                 </div>
               );
             })}
@@ -178,9 +176,8 @@ function Dashboard() {
         </div>
       )}
 
-      {/* Quick update km */}
       <div className="rounded-2xl gradient-card p-4 md:p-6 mb-6 shadow-card">
-        <h3 className="text-base md:text-lg mb-3 flex items-center gap-2"><Gauge size={18} className="text-accent" /> Mise à jour du kilométrage</h3>
+        <h3 className="text-base md:text-lg mb-3 flex items-center gap-2"><Gauge size={18} className="text-accent" /> {t("dash.kmUpdate")}</h3>
         <form
           className="flex gap-2"
           onSubmit={(e) => {
@@ -201,23 +198,22 @@ function Dashboard() {
             className="flex-1 min-w-0 bg-input border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
           <button className="bg-primary text-primary-foreground px-4 py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 whitespace-nowrap shrink-0">
-            Mettre à jour
+            {t("common.update")}
           </button>
         </form>
       </div>
 
-      {/* Dernière vidange */}
       <div className="rounded-2xl gradient-card p-6 shadow-card">
-        <h3 className="text-lg mb-4 flex items-center gap-2"><Droplet size={20} className="text-accent" /> Dernière vidange</h3>
+        <h3 className="text-lg mb-4 flex items-center gap-2"><Droplet size={20} className="text-accent" /> {t("dash.lastOil")}</h3>
         {data.oilChanges[0] ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <Stat label="Date" value={new Date(data.oilChanges[0].date).toLocaleDateString("fr-FR")} icon={Calendar} />
-            <Stat label="Kilométrage" value={`${data.oilChanges[0].km.toLocaleString("fr-FR")} km`} icon={Gauge} />
-            <Stat label="Huile" value={data.oilChanges[0].typeHuile} icon={Droplet} />
-            <Stat label="Filtre" value={data.oilChanges[0].filtreHuile || "—"} icon={Wrench} />
+            <Stat label={t("dash.field.date")} value={new Date(data.oilChanges[0].date).toLocaleDateString("fr-FR")} icon={Calendar} />
+            <Stat label={t("dash.km")} value={`${data.oilChanges[0].km.toLocaleString("fr-FR")} ${t("common.km")}`} icon={Gauge} />
+            <Stat label={t("dash.field.oil")} value={data.oilChanges[0].typeHuile} icon={Droplet} />
+            <Stat label={t("dash.field.filter")} value={data.oilChanges[0].filtreHuile || "—"} icon={Wrench} />
           </div>
         ) : (
-          <p className="text-muted-foreground text-sm">Aucune vidange enregistrée.</p>
+          <p className="text-muted-foreground text-sm">{t("dash.noOil")}</p>
         )}
       </div>
     </AppShell>
@@ -246,7 +242,7 @@ function StatCard({ icon: Icon, label, value, unit, tone }: { icon: any; label: 
   );
 }
 
-function AlertBanner({ tone, title, body, cta, onReset, resetEnabled = true }: { tone: string; title: string; body: React.ReactNode; cta: { to: string; label: string }; onReset?: () => void | Promise<void>; resetEnabled?: boolean }) {
+function AlertBanner({ tone, title, body, cta, onReset, resetEnabled = true, resetLabel = "Reset", resetTip = "", resetDisabledTip = "" }: { tone: string; title: string; body: React.ReactNode; cta: { to: string; label: string }; onReset?: () => void | Promise<void>; resetEnabled?: boolean; resetLabel?: string; resetTip?: string; resetDisabledTip?: string }) {
   const cls = tone === "destructive" ? "bg-destructive/10 border-destructive"
     : tone === "warning" ? "bg-warning/10 border-warning" : "bg-success/10 border-success";
   const Icon = tone === "success" ? CheckCircle2 : AlertTriangle;
@@ -266,10 +262,10 @@ function AlertBanner({ tone, title, body, cta, onReset, resetEnabled = true }: {
               <button
                 onClick={() => resetEnabled && onReset()}
                 disabled={!resetEnabled}
-                title={resetEnabled ? "Enregistrer la vidange au km actuel" : "Disponible quand le kilométrage dépasse la prochaine vidange"}
+                title={resetEnabled ? resetTip : resetDisabledTip}
                 className="inline-flex items-center gap-1.5 text-sm bg-primary text-primary-foreground px-3 py-1.5 rounded-md font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                <RotateCcw size={14} /> Reset vidange
+                <RotateCcw size={14} /> {resetLabel}
               </button>
             )}
           </div>
