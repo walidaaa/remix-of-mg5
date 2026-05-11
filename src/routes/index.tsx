@@ -7,6 +7,8 @@ import { RotateCcw } from "lucide-react";
 import { Car, Droplet, AlertTriangle, CheckCircle2, Gauge, Settings2, Palette, Wrench, ShieldCheck, Calendar, ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { getBrandImage } from "@/lib/brand-images";
+import { useIsAdmin } from "@/lib/use-is-admin";
+import { AdminOverview } from "@/components/admin-overview";
 
 export const Route = createFileRoute("/")({
   head: () => ({
