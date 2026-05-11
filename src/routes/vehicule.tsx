@@ -1,9 +1,9 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { useAppData } from "@/lib/use-app-data";
 import { updateVehicle, type Vehicle, MAINTENANCE_LABELS, type MaintenanceType } from "@/lib/storage";
 import { useEffect, useMemo, useState } from "react";
-import { Save, FileText, X, Car, Droplet, Wrench, ShieldCheck, Gauge, Calendar, Coins } from "lucide-react";
+import { Save, FileText, X, Car, Droplet, Wrench, ShieldCheck, Gauge, Calendar, Coins, Pencil } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { listBrands, listModels } from "@/lib/admin.functions";
 import { useIsAdmin } from "@/lib/use-is-admin";
@@ -22,7 +22,7 @@ export const Route = createFileRoute("/vehicule")({
 function VehiclePage() {
   const data = useAppData();
   const [showAll, setShowAll] = useState(false);
-  const nav = useNavigate();
+  const [editing, setEditing] = useState(false);
   const { isAdmin, checked } = useIsAdmin();
   const v = data.vehicle;
   const fetchBrands = useServerFn(listBrands);
@@ -64,8 +64,10 @@ function VehiclePage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     await updateVehicle(form);
-    nav({ to: "/" });
+    setEditing(false);
   };
+
+  const showForm = !v || editing;
 
   if (checked && isAdmin) return <AdminOverview view="vehicles" />;
 
@@ -75,22 +77,49 @@ function VehiclePage() {
         <div>
           <h1 className="text-3xl mb-2">Mon véhicule</h1>
           <p className="text-muted-foreground">
-            {v ? "Modifiez les informations." : "Renseignez les informations de votre voiture."}
+            {!v ? "Renseignez les informations de votre voiture." : editing ? "Modifiez les informations." : "Informations enregistrées."}
           </p>
         </div>
         {v && (
-          <button
-            type="button"
-            onClick={() => setShowAll(true)}
-            className="inline-flex items-center gap-2 bg-primary/15 text-primary border border-primary/30 px-4 py-2.5 rounded-lg font-semibold hover:bg-primary/25 transition"
-          >
-            <FileText size={18} /> Voir toutes les données
-          </button>
+          <div className="flex flex-wrap gap-2">
+            {!editing && (
+              <button
+                type="button"
+                onClick={() => { setForm(v); setEditing(true); }}
+                className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-lg font-semibold shadow-glow hover:opacity-90 transition"
+              >
+                <Pencil size={18} /> Modifier
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setShowAll(true)}
+              className="inline-flex items-center gap-2 bg-primary/15 text-primary border border-primary/30 px-4 py-2.5 rounded-lg font-semibold hover:bg-primary/25 transition"
+            >
+              <FileText size={18} /> Voir toutes les données
+            </button>
+          </div>
         )}
       </div>
 
       {showAll && v && <FullDataModal data={data} onClose={() => setShowAll(false)} />}
 
+      {!showForm && v && (
+        <div className="rounded-2xl gradient-card p-6 md:p-8 shadow-card">
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+            <Info label="Matricule" value={v.matricule || "—"} mono />
+            <Info label="Marque" value={v.marque || "—"} />
+            <Info label="Modèle" value={v.modele || "—"} />
+            <Info label="Année" value={String(v.annee)} />
+            <Info label="Couleur" value={v.couleur || "—"} />
+            <Info label="Boîte" value={v.transmission} />
+            <Info label="Kilométrage" value={v.kmActuel.toLocaleString("fr-FR") + " km"} highlight />
+            <Info label="Intervalle vidange" value={v.intervalleVidange.toLocaleString("fr-FR") + " km"} />
+          </div>
+        </div>
+      )}
+
+      {showForm && (
       <form onSubmit={submit} className="rounded-2xl gradient-card p-6 md:p-8 shadow-card grid gap-5 md:grid-cols-2">
         <Field label="Matricule" required>
           <input
@@ -181,12 +210,18 @@ function VehiclePage() {
           />
         </Field>
 
-        <div className="md:col-span-2 flex justify-end">
+        <div className="md:col-span-2 flex justify-end gap-2">
+          {v && (
+            <button type="button" onClick={() => { setEditing(false); setForm(v); }} className="inline-flex items-center gap-2 bg-secondary text-foreground px-5 py-3 rounded-lg font-semibold hover:opacity-90">
+              Annuler
+            </button>
+          )}
           <button className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold shadow-glow hover:opacity-90">
             <Save size={18} /> Enregistrer
           </button>
         </div>
       </form>
+      )}
 
       <style>{`
         .input {
