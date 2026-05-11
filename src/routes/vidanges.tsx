@@ -13,6 +13,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { useIsAdmin } from "@/lib/use-is-admin";
+import { AdminOverview } from "@/components/admin-overview";
 
 export const Route = createFileRoute("/vidanges")({
   head: () => ({
