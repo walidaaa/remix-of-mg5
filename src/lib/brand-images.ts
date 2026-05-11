@@ -1,4 +1,4 @@
-import mg from "@/assets/mg5-exterior.jpg";
+import mg from "@/assets/brands/mg.jpg";
 import volkswagen from "@/assets/brands/volkswagen.webp";
 import geely from "@/assets/brands/geely.jpeg";
 import jetour from "@/assets/brands/jetour.jpg";
