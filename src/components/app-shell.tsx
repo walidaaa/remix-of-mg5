@@ -3,13 +3,14 @@ import { Car, Droplet, ShieldCheck, Gauge, Wrench, LogOut, ShieldUser } from "lu
 import { useAuth } from "@/lib/auth";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { LangToggle, useLang } from "@/lib/i18n";
 
 const baseLinks = [
-  { to: "/", label: "Tableau", icon: Gauge },
-  { to: "/vehicule", label: "Véhicule", icon: Car },
-  { to: "/vidanges", label: "Vidanges", icon: Droplet },
-  { to: "/entretien", label: "Entretien", icon: Wrench },
-  { to: "/assurance", label: "Assurance", icon: ShieldCheck },
+  { to: "/", labelKey: "nav.dashboard", icon: Gauge },
+  { to: "/vehicule", labelKey: "nav.vehicle", icon: Car },
+  { to: "/vidanges", labelKey: "nav.oil", icon: Droplet },
+  { to: "/entretien", labelKey: "nav.maintenance", icon: Wrench },
+  { to: "/assurance", labelKey: "nav.insurance", icon: ShieldCheck },
 ] as const;
 
 export function AppShell({ children }: { children: React.ReactNode }) {
