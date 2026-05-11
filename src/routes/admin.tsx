@@ -48,7 +48,7 @@ type Brand = { id: string; name: string };
 function AdminPage() {
   const { user, loading } = useAuth();
   const nav = useNavigate();
-  const [tab, setTab] = useState<"users" | "brands" | "models">("users");
+  const [tab, setTab] = useState<"users" | "vehicles" | "brands" | "models">("users");
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
 
   useEffect(() => {
