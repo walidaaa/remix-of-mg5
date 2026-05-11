@@ -150,6 +150,8 @@ function UsersTab() {
       setUsers(u);
       setBrands(b);
       if (!brand && b[0]) setBrand(b[0].name);
+    } catch (e) {
+      console.error("admin refresh failed", e);
     } finally {
       setLoading(false);
     }
