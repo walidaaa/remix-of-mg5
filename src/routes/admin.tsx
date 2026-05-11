@@ -80,9 +80,12 @@ function AdminPage() {
         <TabBtn active={tab === "brands"} onClick={() => setTab("brands")} icon={<Tag size={16} />}>
           Marques
         </TabBtn>
+        <TabBtn active={tab === "models"} onClick={() => setTab("models")} icon={<Car size={16} />}>
+          Modèles
+        </TabBtn>
       </div>
 
-      {tab === "users" ? <UsersTab /> : <BrandsTab />}
+      {tab === "users" ? <UsersTab /> : tab === "brands" ? <BrandsTab /> : <ModelsTab />}
     </AppShell>
   );
 }
