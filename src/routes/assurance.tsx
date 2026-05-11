@@ -62,6 +62,7 @@ function statusOf(j: number | null) {
 function InsurancePage() {
   const data = useAppData();
   const { isAdmin, checked } = useIsAdmin();
+  const { t } = useLang();
   if (checked && isAdmin) return <AdminOverview view="insurance" />;
 
   const insJ = daysUntil(data.insurance?.dateFin);
@@ -74,27 +75,26 @@ function InsurancePage() {
   return (
     <AppShell>
       <div className="mb-8">
-        <h1 className="text-3xl mb-2">Documents véhicule</h1>
-        <p className="text-muted-foreground">Assurance, vignette, carte grise — dates, scans et coûts (DA).</p>
+        <h1 className="text-3xl mb-2">{t("ins.title")}</h1>
+        <p className="text-muted-foreground">{t("ins.intro")}</p>
       </div>
 
-      {/* Récap table */}
       <div className="rounded-2xl border border-border overflow-hidden gradient-card shadow-card mb-6">
         <Table>
           <TableHeader className="bg-secondary/50">
             <TableRow>
-              <TableHead>Document</TableHead>
-              <TableHead>Référence</TableHead>
-              <TableHead>Début</TableHead>
-              <TableHead>Fin</TableHead>
-              <TableHead>Jours restants</TableHead>
-              <TableHead className="text-right">Coût (DA)</TableHead>
-              <TableHead>Statut</TableHead>
+              <TableHead>{t("ins.col.doc")}</TableHead>
+              <TableHead>{t("ins.col.ref")}</TableHead>
+              <TableHead>{t("ins.col.start")}</TableHead>
+              <TableHead>{t("ins.col.end")}</TableHead>
+              <TableHead>{t("ins.col.daysLeft")}</TableHead>
+              <TableHead className="text-right">{t("ins.col.cost")}</TableHead>
+              <TableHead>{t("ins.col.status")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             <RecapRow
-              label="Assurance"
+              label={t("ins.assurance")}
               icon={ShieldCheck}
               ref1={data.insurance?.compagnie}
               ref2={data.insurance?.numeroPolice}
@@ -105,7 +105,7 @@ function InsurancePage() {
               status={insStatus}
             />
             <RecapRow
-              label="Vignette"
+              label={t("ins.vignette")}
               icon={ScrollText}
               ref1={data.vignette?.compagnie}
               ref2={data.vignette?.numero}
@@ -116,7 +116,7 @@ function InsurancePage() {
               status={vigStatus}
             />
             <RecapRow
-              label="Carte grise"
+              label={t("ins.carte")}
               icon={Car}
               ref1={data.vehicleDoc?.organisme}
               ref2={data.vehicleDoc?.numero}
@@ -133,7 +133,7 @@ function InsurancePage() {
       <div className="grid lg:grid-cols-2 xl:grid-cols-3 gap-6">
         <DocumentCard
           kind="assurance"
-          title="Police d'assurance"
+          title={t("ins.policy")}
           icon={ShieldCheck}
           value={data.insurance}
           status={insStatus}
@@ -141,7 +141,7 @@ function InsurancePage() {
         />
         <DocumentCard
           kind="vignette"
-          title="Vignette automobile"
+          title={t("ins.vignetteAuto")}
           icon={ScrollText}
           value={data.vignette}
           status={vigStatus}
@@ -149,7 +149,7 @@ function InsurancePage() {
         />
         <DocumentCard
           kind="vehicle"
-          title="Carte grise / Permis"
+          title={t("ins.cartePermis")}
           icon={Car}
           value={data.vehicleDoc}
           status={vehStatus}
