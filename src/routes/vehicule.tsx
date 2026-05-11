@@ -8,11 +8,12 @@ import { useServerFn } from "@tanstack/react-start";
 import { listBrands, listModels } from "@/lib/admin.functions";
 import { useIsAdmin } from "@/lib/use-is-admin";
 import { AdminOverview } from "@/components/admin-overview";
+import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/vehicule")({
   head: () => ({
     meta: [
-      { title: "Véhicule — MG5 Maintenance" },
+      { title: "Véhicule — Cars Maintenance" },
       { name: "description", content: "Informations matricule, transmission, couleur de votre véhicule." },
     ],
   }),
