@@ -345,6 +345,115 @@ function UsersTab() {
   );
 }
 
+function VehiclesTab() {
+  const list = useServerFn(adminListAllVehicles);
+  const [rows, setRows] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [q, setQ] = useState("");
+
+  useEffect(() => {
+    setLoading(true);
+    list().then((r) => setRows(r as any[])).finally(() => setLoading(false));
+  }, []);
+
+  const fmtDate = (d: string | null) => d ? new Date(d).toLocaleDateString("fr-FR") : "—";
+  const filtered = rows.filter((v) => {
+    if (!q) return true;
+    const s = q.toLowerCase();
+    return [v.marque, v.modele, v.matricule, v.couleur, v.owner?.username, v.owner?.display_name]
+      .some((x) => (x ?? "").toString().toLowerCase().includes(s));
+  });
+
+  if (loading) return <div className="grid place-items-center py-10"><Loader2 className="animate-spin" /></div>;
+
+  return (
+    <div className="grid gap-4">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="text-sm text-muted-foreground">{filtered.length} véhicule(s)</div>
+        <input
+          value={q} onChange={(e) => setQ(e.target.value)}
+          placeholder="Rechercher (marque, modèle, matricule, propriétaire)…"
+          className="bg-input border border-border rounded-lg px-3 py-2 text-sm w-full md:w-96"
+        />
+      </div>
+
+      <div className="rounded-2xl border border-border overflow-hidden">
+        <Table>
+          <TableHeader className="bg-secondary/50">
+            <TableRow>
+              <TableHead>Propriétaire</TableHead>
+              <TableHead>Marque / Modèle</TableHead>
+              <TableHead>Matricule</TableHead>
+              <TableHead>Année</TableHead>
+              <TableHead>Couleur</TableHead>
+              <TableHead>Trans.</TableHead>
+              <TableHead>KM</TableHead>
+              <TableHead>Interv.</TableHead>
+              <TableHead>Dernière vidange</TableHead>
+              <TableHead>Vidanges</TableHead>
+              <TableHead>Assurance</TableHead>
+              <TableHead>Entretiens</TableHead>
+              <TableHead>Créé le</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filtered.map((v) => {
+              const overdue = (v.km_actuel ?? 0) >= (v.intervalle_vidange ?? 10000);
+              return (
+                <TableRow key={v.user_id}>
+                  <TableCell>
+                    <div className="font-medium">{v.owner?.username ?? "—"}</div>
+                    <div className="text-xs text-muted-foreground">{v.owner?.display_name ?? ""}</div>
+                    {v.owner?.blocked && (
+                      <span className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded bg-destructive/15 text-destructive mt-1">
+                        <Lock size={10} /> Bloqué
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell className="font-medium">{v.marque} {v.modele}</TableCell>
+                  <TableCell>{v.matricule || "—"}</TableCell>
+                  <TableCell>{v.annee}</TableCell>
+                  <TableCell>{v.couleur || "—"}</TableCell>
+                  <TableCell className="capitalize text-xs">{v.transmission}</TableCell>
+                  <TableCell className={overdue ? "text-destructive font-semibold" : ""}>
+                    {(v.km_actuel ?? 0).toLocaleString("fr-FR")}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{(v.intervalle_vidange ?? 10000).toLocaleString("fr-FR")}</TableCell>
+                  <TableCell className="text-xs">
+                    {v.last_oil ? (
+                      <>
+                        <div>{fmtDate(v.last_oil.date)}</div>
+                        <div className="text-muted-foreground">{v.last_oil.km?.toLocaleString("fr-FR")} km · {v.last_oil.type_huile}</div>
+                      </>
+                    ) : "—"}
+                  </TableCell>
+                  <TableCell>{v.oil_count}</TableCell>
+                  <TableCell className="text-xs">
+                    {v.insurance ? (
+                      <>
+                        <div className="font-medium">{v.insurance.compagnie || "—"}</div>
+                        <div className="text-muted-foreground">{v.insurance.numero_police || ""}</div>
+                        <div className="text-muted-foreground">{fmtDate(v.insurance.date_debut)} → {fmtDate(v.insurance.date_fin)}</div>
+                      </>
+                    ) : "—"}
+                  </TableCell>
+                  <TableCell>{v.maintenance_count}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{fmtDate(v.created_at)}</TableCell>
+                </TableRow>
+              );
+            })}
+            {filtered.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={13} className="text-center text-muted-foreground py-8">Aucun véhicule</TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}
+
 function BrandsTab() {
   const list = useServerFn(listBrands);
   const add = useServerFn(adminAddBrand);
