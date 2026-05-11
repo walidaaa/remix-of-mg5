@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   adminListAllVehicles,
@@ -8,10 +8,12 @@ import {
 } from "@/lib/admin.functions";
 import { AppShell } from "@/components/app-shell";
 import { getBrandImage } from "@/lib/brand-images";
-import { Car, Droplet, Wrench, ShieldCheck, Users, Gauge, Calendar } from "lucide-react";
+import { Car, Droplet, Wrench, ShieldCheck, Users, Gauge, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { MAINTENANCE_LABELS, type MaintenanceType } from "@/lib/storage";
 
 type View = "dashboard" | "vehicles" | "oil" | "maintenance" | "insurance";
+
+const PAGE_SIZES = [10, 20, 50] as const;
 
 export function AdminOverview({ view }: { view: View }) {
   const fetchVeh = useServerFn(adminListAllVehicles);
@@ -58,6 +60,74 @@ export function AdminOverview({ view }: { view: View }) {
   if (view === "oil") return <Oils oils={oils} />;
   if (view === "maintenance") return <Maint items={maint} />;
   return <Ins items={ins} />;
+}
+
+function usePagination<T>(items: T[]) {
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [page, setPage] = useState(1);
+  const total = items.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const safePage = Math.min(page, totalPages);
+  const start = (safePage - 1) * pageSize;
+  const pageItems = useMemo(() => items.slice(start, start + pageSize), [items, start, pageSize]);
+
+  useEffect(() => { setPage(1); }, [pageSize, total]);
+
+  return { pageItems, page: safePage, setPage, pageSize, setPageSize, totalPages, total, start };
+}
+
+function PaginationBar({
+  page, setPage, pageSize, setPageSize, totalPages, total, start, count,
+}: {
+  page: number; setPage: (n: number) => void;
+  pageSize: number; setPageSize: (n: number) => void;
+  totalPages: number; total: number; start: number; count: number;
+}) {
+  if (total === 0) return null;
+  return (
+    <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl gradient-card border border-border p-3 shadow-card">
+      <div className="text-xs text-muted-foreground">
+        Affichage <strong className="text-foreground">{start + 1}</strong>–<strong className="text-foreground">{start + count}</strong> sur <strong className="text-foreground">{total}</strong>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-muted-foreground">Par page</span>
+        <div className="flex rounded-lg overflow-hidden border border-border">
+          {PAGE_SIZES.map((s) => (
+            <button
+              key={s}
+              onClick={() => setPageSize(s)}
+              className={`px-3 py-1.5 text-xs font-semibold transition ${
+                pageSize === s ? "bg-primary text-primary-foreground" : "bg-secondary/40 hover:bg-secondary text-foreground"
+              }`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-1 ml-2">
+          <button
+            onClick={() => setPage(Math.max(1, page - 1))}
+            disabled={page <= 1}
+            className="p-1.5 rounded-lg bg-secondary/40 hover:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed"
+            aria-label="Précédent"
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <span className="text-xs font-mono px-2">
+            {page} / {totalPages}
+          </span>
+          <button
+            onClick={() => setPage(Math.min(totalPages, page + 1))}
+            disabled={page >= totalPages}
+            className="p-1.5 rounded-lg bg-secondary/40 hover:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed"
+            aria-label="Suivant"
+          >
+            <ChevronRight size={16} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function Header({ icon: Icon, title, subtitle, count }: { icon: any; title: string; subtitle: string; count?: number }) {
@@ -161,23 +231,26 @@ function VehicleCard({ v }: { v: any }) {
 }
 
 function Vehicles({ vehicles }: any) {
+  const p = usePagination<any>(vehicles);
   return (
     <AppShell>
       <Header icon={Car} title="Tous les véhicules" subtitle="Tous les véhicules de tous les utilisateurs" count={vehicles.length} />
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {vehicles.map((v: any) => <VehicleCard key={v.user_id} v={v} />)}
+        {p.pageItems.map((v: any) => <VehicleCard key={v.user_id} v={v} />)}
         {vehicles.length === 0 && <p className="text-muted-foreground">Aucun véhicule.</p>}
       </div>
+      <PaginationBar {...p} count={p.pageItems.length} />
     </AppShell>
   );
 }
 
 function Oils({ oils }: any) {
+  const p = usePagination<any>(oils);
   return (
     <AppShell>
       <Header icon={Droplet} title="Toutes les vidanges" subtitle="Historique global" count={oils.length} />
       <div className="grid gap-3">
-        {oils.map((o: any) => (
+        {p.pageItems.map((o: any) => (
           <div key={o.id} className="rounded-xl gradient-card p-4 shadow-card flex items-center gap-4 flex-wrap">
             <div className="rounded-lg bg-primary/15 text-primary p-3"><Droplet size={20} /></div>
             <div className="flex-1 min-w-[200px]">
@@ -199,16 +272,18 @@ function Oils({ oils }: any) {
         ))}
         {oils.length === 0 && <p className="text-muted-foreground">Aucune vidange.</p>}
       </div>
+      <PaginationBar {...p} count={p.pageItems.length} />
     </AppShell>
   );
 }
 
 function Maint({ items }: any) {
+  const p = usePagination<any>(items);
   return (
     <AppShell>
       <Header icon={Wrench} title="Tous les entretiens" subtitle="Historique global" count={items.length} />
       <div className="grid md:grid-cols-2 gap-3">
-        {items.map((m: any) => {
+        {p.pageItems.map((m: any) => {
           const def = MAINTENANCE_LABELS[m.type as MaintenanceType];
           return (
             <div key={m.id} className="rounded-xl gradient-card p-4 shadow-card">
@@ -231,16 +306,18 @@ function Maint({ items }: any) {
         })}
         {items.length === 0 && <p className="text-muted-foreground">Aucun entretien.</p>}
       </div>
+      <PaginationBar {...p} count={p.pageItems.length} />
     </AppShell>
   );
 }
 
 function Ins({ items }: any) {
+  const p = usePagination<any>(items);
   return (
     <AppShell>
       <Header icon={ShieldCheck} title="Toutes les assurances" subtitle="Polices de tous les utilisateurs" count={items.length} />
       <div className="grid md:grid-cols-2 gap-3">
-        {items.map((i: any) => {
+        {p.pageItems.map((i: any) => {
           const j = i.date_fin ? Math.ceil((+new Date(i.date_fin) - Date.now()) / 86400000) : null;
           const tone = j === null ? "muted" : j < 0 ? "destructive" : j <= 30 ? "warning" : "success";
           const cls = tone === "destructive" ? "border-destructive bg-destructive/10"
@@ -273,6 +350,7 @@ function Ins({ items }: any) {
         })}
         {items.length === 0 && <p className="text-muted-foreground">Aucune assurance.</p>}
       </div>
+      <PaginationBar {...p} count={p.pageItems.length} />
     </AppShell>
   );
 }
