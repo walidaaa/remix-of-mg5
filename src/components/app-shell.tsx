@@ -109,7 +109,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      <main className="px-4 md:px-10 py-6 md:py-10 max-w-5xl mx-auto">{children}</main>
+      <RouteProgress />
+
+      <main key={pathname} className="px-4 md:px-10 py-6 md:py-10 max-w-5xl mx-auto animate-fade-in">
+        {!data.loaded ? <PageSkeleton /> : children}
+      </main>
 
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-card/95 backdrop-blur border-t border-border pb-[env(safe-area-inset-bottom)]">
         <div className={`grid ${links.length === 6 ? "grid-cols-6" : "grid-cols-5"}`}>
