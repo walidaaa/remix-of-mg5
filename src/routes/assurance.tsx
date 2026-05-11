@@ -249,16 +249,6 @@ const REF2_KEY: Record<DocKind, string> = {
   vignette: "numero",
   vehicle: "numero",
 };
-const REF1_LABEL: Record<DocKind, string> = {
-  assurance: "Compagnie",
-  vignette: "Agence vignette",
-  vehicle: "Organisme",
-};
-const REF2_LABEL: Record<DocKind, string> = {
-  assurance: "N° police",
-  vignette: "N° vignette",
-  vehicle: "N° immatriculation / carte",
-};
 
 function DocumentCard({
   kind,
