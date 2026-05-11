@@ -347,9 +347,8 @@ export const adminListAllInsurance = createServerFn({ method: "GET" })
 
 // Brands
 export const listBrands = createServerFn({ method: "GET" })
-  .middleware([attachSupabaseAuth, requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { data, error } = await context.supabase
+  .handler(async () => {
+    const { data, error } = await supabaseAdmin
       .from("car_brands")
       .select("id, name")
       .order("name");
