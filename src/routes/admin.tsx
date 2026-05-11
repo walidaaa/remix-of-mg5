@@ -12,8 +12,11 @@ import {
   listBrands,
   adminAddBrand,
   adminDeleteBrand,
+  listModels,
+  adminAddModel,
+  adminDeleteModel,
 } from "@/lib/admin.functions";
-import { Plus, Trash2, KeyRound, ShieldCheck, Users, Tag, Loader2 } from "lucide-react";
+import { Plus, Trash2, KeyRound, ShieldCheck, Users, Tag, Loader2, Car } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Admin — MG5 Maintenance" }] }),
