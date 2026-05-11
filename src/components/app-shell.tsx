@@ -19,11 +19,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth();
   const { t } = useLang();
   const data = useAppData();
-  const cached = typeof window !== "undefined" ? localStorage.getItem("brandLabel") : null;
+  const cacheKey = user ? `brandLabel:${user.id}` : null;
+  const cached = cacheKey && typeof window !== "undefined" ? localStorage.getItem(cacheKey) : null;
   const computed = data.vehicle?.modele || data.vehicle?.marque;
   useEffect(() => {
-    if (computed) localStorage.setItem("brandLabel", computed);
-  }, [computed]);
+    if (computed && cacheKey) localStorage.setItem(cacheKey, computed);
+  }, [computed, cacheKey]);
   const brandLabel = (computed || cached || "").toUpperCase();
   const [isAdmin, setIsAdmin] = useState(false);
   const [username, setUsername] = useState<string | null>(null);
