@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { useAppData } from "@/lib/use-app-data";
-import { updateVehicle, type Vehicle, MAINTENANCE_LABELS, type MaintenanceType } from "@/lib/storage";
+import { updateVehicle, addOilChange, type Vehicle, MAINTENANCE_LABELS, type MaintenanceType } from "@/lib/storage";
 import { useEffect, useMemo, useState } from "react";
 import { Save, FileText, X, Car, Droplet, Wrench, ShieldCheck, Gauge, Calendar, Coins, Pencil } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
@@ -41,6 +41,7 @@ function VehiclePage() {
       intervalleVidange: 10000,
     }
   );
+  const [dernierVidangeKm, setDernierVidangeKm] = useState<string>("");
 
   useEffect(() => {
     fetchBrands().then((b) => {
@@ -61,9 +62,23 @@ function VehiclePage() {
   const set = <K extends keyof Vehicle>(k: K, val: Vehicle[K]) =>
     setForm((f) => ({ ...f, [k]: val }));
 
+  const isFirstSetup = !v || data.oilChanges.length === 0;
+  const prochainKm = useMemo(() => {
+    const base = data.oilChanges[0]?.km ?? Number(dernierVidangeKm || 0);
+    return base + (form.intervalleVidange || 0);
+  }, [data.oilChanges, dernierVidangeKm, form.intervalleVidange]);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     await updateVehicle(form);
+    if (isFirstSetup && dernierVidangeKm && Number(dernierVidangeKm) > 0) {
+      await addOilChange({
+        date: new Date().toISOString(),
+        km: Number(dernierVidangeKm),
+        typeHuile: "5W-30",
+        filtreHuile: "",
+      });
+    }
     setEditing(false);
   };
 
@@ -201,7 +216,7 @@ function VehiclePage() {
           />
         </Field>
 
-        <Field label="Intervalle vidange (km)">
+        <Field label="Intervalle vidange (km) — référence">
           <input
             type="number"
             value={form.intervalleVidange}
@@ -209,6 +224,39 @@ function VehiclePage() {
             className="input"
           />
         </Field>
+
+        {isFirstSetup && (
+          <Field label="Dernière vidange (km)">
+            <input
+              type="number"
+              value={dernierVidangeKm}
+              onChange={(e) => setDernierVidangeKm(e.target.value)}
+              placeholder="Ex: 45000"
+              className="input"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Saisissez le kilométrage de la dernière vidange effectuée. Une entrée sera créée automatiquement.
+            </p>
+          </Field>
+        )}
+
+        {(form.intervalleVidange > 0 && (data.oilChanges[0]?.km || Number(dernierVidangeKm) > 0)) && (
+          <div className="md:col-span-2 rounded-xl border border-primary/30 bg-primary/10 p-4 grid gap-1">
+            <div className="text-xs uppercase tracking-wider text-primary font-semibold">Calcul prochaine vidange</div>
+            <div className="text-sm text-muted-foreground">
+              Dernière vidange : <span className="font-mono text-foreground">{(data.oilChanges[0]?.km ?? Number(dernierVidangeKm || 0)).toLocaleString("fr-FR")} km</span>
+              {" + "}Intervalle : <span className="font-mono text-foreground">{form.intervalleVidange.toLocaleString("fr-FR")} km</span>
+            </div>
+            <div className="text-lg font-display text-primary">
+              Prochaine vidange obligatoire à {prochainKm.toLocaleString("fr-FR")} km
+              {form.kmActuel > 0 && (
+                <span className="text-sm text-muted-foreground ml-2">
+                  ({(prochainKm - form.kmActuel).toLocaleString("fr-FR")} km restants)
+                </span>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="md:col-span-2 flex justify-end gap-2">
           {v && (
