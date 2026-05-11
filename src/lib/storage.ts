@@ -303,7 +303,22 @@ export async function updateVignette(v: Vignette) {
   ping();
 }
 
-export async function uploadDocument(kind: "assurance" | "vignette", file: File): Promise<string | null> {
+export async function updateVehicleDoc(v: VehicleDoc) {
+  const userId = await uid();
+  if (!userId) return;
+  await supabase.from("vehicle_doc" as any).upsert({
+    user_id: userId,
+    organisme: v.organisme,
+    numero: v.numero,
+    date_debut: v.dateDebut || null,
+    date_fin: v.dateFin || null,
+    cout: v.cout ?? null,
+    scan_url: v.scanUrl ?? null,
+  } as any);
+  ping();
+}
+
+export async function uploadDocument(kind: "assurance" | "vignette" | "vehicle", file: File): Promise<string | null> {
   const userId = await uid();
   if (!userId) return null;
   const ext = file.name.split(".").pop() || "jpg";
