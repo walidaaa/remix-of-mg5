@@ -395,10 +395,10 @@ function DocumentCard({
       <div className="p-4 grid gap-3">
         {!editing && value ? (
           <div className="grid grid-cols-2 gap-2">
-            <Mini label="Réf." value={ref2 || "—"} mono />
-            <Mini label="Coût" value={value.cout != null ? `${value.cout.toLocaleString("fr-FR")} DA` : "—"} />
-            <Mini label="Début" value={dateDebut ? new Date(dateDebut).toLocaleDateString("fr-FR") : "—"} />
-            <Mini label="Fin" value={dateFin ? new Date(dateFin).toLocaleDateString("fr-FR") : "—"} />
+            <Mini label={t("ins.field.ref")} value={ref2 || "—"} mono />
+            <Mini label={t("ins.field.cost.short")} value={value.cout != null ? `${value.cout.toLocaleString("fr-FR")} DA` : "—"} />
+            <Mini label={t("ins.col.start")} value={dateDebut ? new Date(dateDebut).toLocaleDateString("fr-FR") : "—"} />
+            <Mini label={t("ins.col.end")} value={dateFin ? new Date(dateFin).toLocaleDateString("fr-FR") : "—"} />
           </div>
         ) : (
           <form onSubmit={submit} className="grid gap-3">
