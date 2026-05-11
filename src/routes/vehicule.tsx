@@ -66,6 +66,8 @@ function VehiclePage() {
     nav({ to: "/" });
   };
 
+  if (checked && isAdmin) return <AdminOverview view="vehicles" />;
+
   return (
     <AppShell>
       <h1 className="text-3xl mb-2">Mon véhicule</h1>
