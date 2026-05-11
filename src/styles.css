@@ -91,6 +91,10 @@
   --border: oklch(0.86 0.01 250);
   --input: oklch(0.92 0.01 250);
   --ring: oklch(0.60 0.18 280);
+  --gradient-hero: linear-gradient(135deg, #6C63FF 0%, #1E2A47 100%);
+  --gradient-card: linear-gradient(160deg, #F0F3F8 0%, #DDE3EC 100%);
+  --shadow-glow: 0 0 30px -8px rgba(108, 99, 255, 0.45);
+  --shadow-card: 8px 8px 18px #A3B1C6, -8px -8px 18px #FFFFFF;
 }
 
 @layer base {
