@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { useAppData } from "@/lib/use-app-data";
-import { updateVehicle, addOilChange, type Vehicle, MAINTENANCE_LABELS, type MaintenanceType } from "@/lib/storage";
+import { updateVehicle, addOilChange, type Vehicle } from "@/lib/storage";
 import { useEffect, useMemo, useState } from "react";
 import { Save, FileText, X, Car, Droplet, Wrench, ShieldCheck, Gauge, Calendar, Coins, Pencil } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
