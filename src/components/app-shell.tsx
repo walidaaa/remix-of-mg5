@@ -18,6 +18,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { pathname } = useLocation();
   const { user, signOut } = useAuth();
   const { t } = useLang();
+  const data = useAppData();
+  const brandLabel = (data.vehicle?.modele || data.vehicle?.marque || "MG5").toUpperCase();
   const [isAdmin, setIsAdmin] = useState(false);
   const [username, setUsername] = useState<string | null>(null);
 
