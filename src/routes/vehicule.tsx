@@ -71,10 +71,25 @@ function VehiclePage() {
 
   return (
     <AppShell>
-      <h1 className="text-3xl mb-2">Mon véhicule</h1>
-      <p className="text-muted-foreground mb-8">
-        {v ? "Modifiez les informations." : "Renseignez les informations de votre voiture."}
-      </p>
+      <div className="flex items-start justify-between gap-4 mb-8 flex-wrap">
+        <div>
+          <h1 className="text-3xl mb-2">Mon véhicule</h1>
+          <p className="text-muted-foreground">
+            {v ? "Modifiez les informations." : "Renseignez les informations de votre voiture."}
+          </p>
+        </div>
+        {v && (
+          <button
+            type="button"
+            onClick={() => setShowAll(true)}
+            className="inline-flex items-center gap-2 bg-primary/15 text-primary border border-primary/30 px-4 py-2.5 rounded-lg font-semibold hover:bg-primary/25 transition"
+          >
+            <FileText size={18} /> Voir toutes les données
+          </button>
+        )}
+      </div>
+
+      {showAll && v && <FullDataModal data={data} onClose={() => setShowAll(false)} />}
 
       <form onSubmit={submit} className="rounded-2xl gradient-card p-6 md:p-8 shadow-card grid gap-5 md:grid-cols-2">
         <Field label="Matricule" required>
