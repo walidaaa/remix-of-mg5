@@ -9,6 +9,8 @@ import {
   adminCreateUser,
   adminDeleteUser,
   adminResetPassword,
+  adminResetVidange,
+  adminSetBlocked,
   listBrands,
   adminAddBrand,
   adminDeleteBrand,
@@ -16,7 +18,16 @@ import {
   adminAddModel,
   adminDeleteModel,
 } from "@/lib/admin.functions";
-import { Plus, Trash2, KeyRound, ShieldCheck, Users, Tag, Loader2, Car } from "lucide-react";
+import { Plus, Trash2, KeyRound, ShieldCheck, Users, Tag, Loader2, Car, RotateCcw, Lock, Unlock } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Admin — MG5 Maintenance" }] }),
@@ -28,7 +39,8 @@ type UserRow = {
   username: string | null;
   display_name: string | null;
   role: "admin" | "user";
-  vehicle: { marque: string; modele: string; matricule: string } | null;
+  blocked: boolean;
+  vehicle: { marque: string; modele: string; matricule: string; km_actuel: number; intervalle_vidange: number } | null;
 };
 type Brand = { id: string; name: string };
 
