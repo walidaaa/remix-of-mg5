@@ -384,9 +384,9 @@ function DocumentCard({
         >
           {status === "ok" ? <CheckCircle2 size={14} /> : <AlertTriangle size={14} />}
           <span className="font-medium">
-            {status === "expiree" && `Expirée depuis ${Math.abs(j!)} j`}
-            {status === "bientot" && `Expire dans ${j} j`}
-            {status === "ok" && `Valide ${j} j`}
+            {status === "expiree" && `${t("ins.status.expiredSince")} ${Math.abs(j!)} ${t("common.days")}`}
+            {status === "bientot" && `${t("ins.status.expiresIn")} ${j} ${t("common.days")}`}
+            {status === "ok" && `${t("ins.status.validFor")} ${j} ${t("common.days")}`}
           </span>
         </div>
       )}
