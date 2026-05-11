@@ -29,7 +29,7 @@ function Dashboard() {
       <AppShell>
         <div className="rounded-2xl overflow-hidden shadow-card">
           <div className="relative h-64 md:h-80">
-            <img src={mg5Photo} alt="MG5" className="w-full h-full object-cover" />
+            <img src={getBrandImage(null)} alt="Vehicle" className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
           </div>
           <div className="p-8 text-center -mt-16 relative">
@@ -70,7 +70,7 @@ function Dashboard() {
       {/* Hero with car photo */}
       <div className="relative rounded-2xl overflow-hidden shadow-card mb-6">
         <div className="relative h-56 md:h-72">
-          <img src={mg5Photo} alt={`${v.marque} ${v.modele}`} className="w-full h-full object-cover" />
+          <img src={getBrandImage(v.marque)} alt={`${v.marque} ${v.modele}`} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-transparent" />
           <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-8">
             <div className="text-xs uppercase tracking-widest text-primary font-semibold">
