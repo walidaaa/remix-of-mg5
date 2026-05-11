@@ -121,7 +121,7 @@ function OilChangesPage() {
                   </TableCell>
                   <TableCell className="text-muted-foreground">{o.filtreHuile || "—"}</TableCell>
                   <TableCell className="text-right whitespace-nowrap">
-                    {o.cout != null ? `${o.cout} DH` : "—"}
+                    {o.cout != null ? `${o.cout} DA` : "—"}
                   </TableCell>
                   <TableCell className="text-muted-foreground max-w-[200px] truncate" title={o.notes ?? ""}>
                     {o.notes || "—"}

@@ -204,7 +204,7 @@ function Dashboard({ vehicles, oils, maint, ins }: any) {
 
       <div className="rounded-2xl gradient-card p-6 shadow-card mb-6">
         <h3 className="text-lg mb-4">Coût total enregistré</h3>
-        <div className="font-display text-4xl text-primary">{totalCost.toLocaleString("fr-FR")} <span className="text-base text-muted-foreground">DH</span></div>
+        <div className="font-display text-4xl text-primary">{totalCost.toLocaleString("fr-FR")} <span className="text-base text-muted-foreground">DA</span></div>
       </div>
 
       <h3 className="text-xl mb-4">Derniers véhicules</h3>
@@ -347,9 +347,9 @@ function VehicleDetailModal({ vehicle, oils, maint, insurance, onClose }: {
 
           <DetailSection icon={Coins} title="Coûts cumulés" tone="success">
             <DetailGrid>
-              <DetailInfo label="Vidanges" value={`${totalOil.toLocaleString("fr-FR")} DH`} />
-              <DetailInfo label="Entretiens" value={`${totalMaint.toLocaleString("fr-FR")} DH`} />
-              <DetailInfo label="Total" value={`${total.toLocaleString("fr-FR")} DH`} highlight />
+              <DetailInfo label="Vidanges" value={`${totalOil.toLocaleString("fr-FR")} DA`} />
+              <DetailInfo label="Entretiens" value={`${totalMaint.toLocaleString("fr-FR")} DA`} />
+              <DetailInfo label="Total" value={`${total.toLocaleString("fr-FR")} DA`} highlight />
             </DetailGrid>
           </DetailSection>
 
@@ -382,7 +382,7 @@ function VehicleDetailModal({ vehicle, oils, maint, insurance, onClose }: {
                       <span className="px-2 py-0.5 rounded bg-primary/15 text-primary text-xs">{o.type_huile}</span>
                       {o.filtre_huile && <span className="text-xs text-muted-foreground">Filtre: {o.filtre_huile}</span>}
                     </div>
-                    <span className="font-mono text-sm">{o.cout != null ? `${o.cout} DH` : "—"}</span>
+                    <span className="font-mono text-sm">{o.cout != null ? `${o.cout} DA` : "—"}</span>
                   </div>
                 ))}
               </div>
@@ -401,7 +401,7 @@ function VehicleDetailModal({ vehicle, oils, maint, insurance, onClose }: {
                         <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Calendar size={11} />{new Date(m.date).toLocaleDateString("fr-FR")}</span>
                         <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Gauge size={11} />{m.km.toLocaleString("fr-FR")} km</span>
                       </div>
-                      <span className="font-mono text-sm">{m.cout != null ? `${m.cout} DH` : "—"}</span>
+                      <span className="font-mono text-sm">{m.cout != null ? `${m.cout} DA` : "—"}</span>
                     </div>
                   );
                 })}
@@ -473,7 +473,7 @@ function Oils({ oils }: any) {
               </div>
             </div>
             <div className="text-right">
-              <div className="font-mono">{o.cout != null ? `${o.cout} DH` : "—"}</div>
+              <div className="font-mono">{o.cout != null ? `${o.cout} DA` : "—"}</div>
               {o.filtre_huile && <div className="text-xs text-muted-foreground">{o.filtre_huile}</div>}
             </div>
           </div>
@@ -514,7 +514,7 @@ function Maint({ items }: any) {
                     {m.vehicle && <span className="text-xs text-muted-foreground">{m.vehicle.marque} {m.vehicle.modele}</span>}
                   </div>
                 </div>
-                <div className="text-sm font-mono">{m.cout != null ? `${m.cout} DH` : "—"}</div>
+                <div className="text-sm font-mono">{m.cout != null ? `${m.cout} DA` : "—"}</div>
               </div>
             </div>
           );
