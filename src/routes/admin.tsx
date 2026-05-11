@@ -336,3 +336,91 @@ function BrandsTab() {
     </div>
   );
 }
+
+function ModelsTab() {
+  const fetchBrands = useServerFn(listBrands);
+  const fetchModels = useServerFn(listModels);
+  const add = useServerFn(adminAddModel);
+  const del = useServerFn(adminDeleteModel);
+
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [brandId, setBrandId] = useState("");
+  const [models, setModels] = useState<{ id: string; name: string }[]>([]);
+  const [name, setName] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchBrands().then((b) => {
+      setBrands(b);
+      if (!brandId && b[0]) setBrandId(b[0].id);
+    });
+  }, []);
+
+  const refresh = async () => {
+    if (!brandId) return;
+    const m = await fetchModels({ data: { brandId } });
+    setModels(m);
+  };
+  useEffect(() => { refresh(); }, [brandId]);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErr(null);
+    setBusy(true);
+    try {
+      await add({ data: { brandId, name } });
+      setName("");
+      refresh();
+    } catch (e: any) {
+      setErr(e?.message ?? "Erreur");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="grid gap-4">
+      <div className="flex gap-2 items-center">
+        <label className="text-sm text-muted-foreground">Marque :</label>
+        <select
+          value={brandId} onChange={(e) => setBrandId(e.target.value)}
+          className="bg-input border border-border rounded-lg px-3 py-2"
+        >
+          {brands.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+        </select>
+      </div>
+
+      <form onSubmit={submit} className="flex gap-2">
+        <input
+          value={name} onChange={(e) => setName(e.target.value)}
+          required maxLength={80} placeholder="Nouveau modèle (ex: MG5 Luxury)"
+          className="flex-1 bg-input border border-border rounded-lg px-3 py-2"
+        />
+        <button disabled={busy || !brandId} className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg font-semibold disabled:opacity-50">
+          <Plus size={16} /> Ajouter
+        </button>
+      </form>
+      {err && <div className="text-sm text-destructive">{err}</div>}
+
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+        {models.map((m) => (
+          <div key={m.id} className="flex items-center justify-between bg-secondary/40 rounded-lg px-3 py-2">
+            <span className="font-medium">{m.name}</span>
+            <button
+              onClick={async () => {
+                if (!confirm(`Supprimer "${m.name}" ?`)) return;
+                await del({ data: { id: m.id } });
+                refresh();
+              }}
+              className="text-destructive hover:bg-destructive/10 p-1 rounded"
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+        ))}
+        {models.length === 0 && <div className="text-sm text-muted-foreground col-span-full">Aucun modèle.</div>}
+      </div>
+    </div>
+  );
+}
