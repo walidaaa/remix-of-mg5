@@ -30,6 +30,7 @@ function OilChangesPage() {
   const data = useAppData();
   const { isAdmin, checked } = useIsAdmin();
   const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     date: new Date().toISOString().slice(0, 10),
     km: data.vehicle?.kmActuel ?? 0,
@@ -39,18 +40,24 @@ function OilChangesPage() {
     notes: "",
   });
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    addOilChange({
-      date: new Date(form.date).toISOString(),
-      km: Number(form.km),
-      typeHuile: form.typeHuile,
-      filtreHuile: form.filtreHuile,
-      cout: form.cout ? Number(form.cout) : undefined,
-      notes: form.notes || undefined,
-    });
-    setOpen(false);
-    setForm((f) => ({ ...f, filtreHuile: "", cout: "", notes: "" }));
+    if (saving) return;
+    setSaving(true);
+    try {
+      await addOilChange({
+        date: new Date(form.date).toISOString(),
+        km: Number(form.km),
+        typeHuile: form.typeHuile,
+        filtreHuile: form.filtreHuile,
+        cout: form.cout ? Number(form.cout) : undefined,
+        notes: form.notes || undefined,
+      });
+      setOpen(false);
+      setForm((f) => ({ ...f, filtreHuile: "", cout: "", notes: "" }));
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (checked && isAdmin) return <AdminOverview view="oil" />;
