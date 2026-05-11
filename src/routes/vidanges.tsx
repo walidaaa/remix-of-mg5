@@ -72,7 +72,7 @@ function OilChangesPage() {
           </p>
         </div>
         <button
-          onClick={() => setOpen(true)}
+          onClick={() => { setForm((f) => ({ ...f, km: data.vehicle?.kmActuel ?? 0 })); setOpen(true); }}
           disabled={!data.vehicle}
           className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-3 rounded-lg font-semibold shadow-glow hover:opacity-90 disabled:opacity-50"
         >
