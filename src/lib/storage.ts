@@ -108,11 +108,12 @@ export async function fetchAppData(): Promise<AppData> {
   const userId = await uid();
   if (!userId) return emptyData;
 
-  const [veh, oils, ins, maint] = await Promise.all([
+  const [veh, oils, ins, maint, vig] = await Promise.all([
     supabase.from("vehicles").select("*").eq("user_id", userId).maybeSingle(),
     supabase.from("oil_changes").select("*").eq("user_id", userId).order("km", { ascending: false }),
     supabase.from("insurance").select("*").eq("user_id", userId).maybeSingle(),
     supabase.from("maintenance_items").select("*").eq("user_id", userId).order("date", { ascending: false }),
+    supabase.from("vignette").select("*").eq("user_id", userId).maybeSingle(),
   ]);
 
   const vehicle: Vehicle | null = veh.data
@@ -144,6 +145,19 @@ export async function fetchAppData(): Promise<AppData> {
         numeroPolice: ins.data.numero_police,
         dateDebut: ins.data.date_debut ?? "",
         dateFin: ins.data.date_fin ?? "",
+        cout: (ins.data as any).cout != null ? Number((ins.data as any).cout) : undefined,
+        scanUrl: (ins.data as any).scan_url ?? undefined,
+      }
+    : null;
+
+  const vignette: Vignette | null = vig.data
+    ? {
+        compagnie: (vig.data as any).compagnie ?? "",
+        numero: (vig.data as any).numero ?? "",
+        dateDebut: (vig.data as any).date_debut ?? "",
+        dateFin: (vig.data as any).date_fin ?? "",
+        cout: (vig.data as any).cout != null ? Number((vig.data as any).cout) : undefined,
+        scanUrl: (vig.data as any).scan_url ?? undefined,
       }
     : null;
 
@@ -158,7 +172,7 @@ export async function fetchAppData(): Promise<AppData> {
     notes: m.notes ?? undefined,
   }));
 
-  return { vehicle, oilChanges, insurance, maintenance };
+  return { vehicle, oilChanges, insurance, vignette, maintenance };
 }
 
 export async function updateVehicle(v: Vehicle) {
