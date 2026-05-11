@@ -22,7 +22,9 @@ function VehiclePage() {
   const nav = useNavigate();
   const v = data.vehicle;
   const fetchBrands = useServerFn(listBrands);
+  const fetchModels = useServerFn(listModels);
   const [brands, setBrands] = useState<{ id: string; name: string }[]>([]);
+  const [models, setModels] = useState<{ id: string; name: string }[]>([]);
   const [form, setForm] = useState<Vehicle>(
     v ?? {
       matricule: "",
@@ -42,6 +44,13 @@ function VehiclePage() {
       if (!form.marque && b[0]) setForm((f) => ({ ...f, marque: b[0].name }));
     }).catch(() => {});
   }, [fetchBrands]);
+
+  useEffect(() => {
+    if (!form.marque) { setModels([]); return; }
+    fetchModels({ data: { brandName: form.marque } })
+      .then((m) => setModels(m))
+      .catch(() => setModels([]));
+  }, [form.marque, fetchModels]);
 
   useEffect(() => { if (v) setForm(v); }, [v]);
 
