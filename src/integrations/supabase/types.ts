@@ -64,25 +64,31 @@ export type Database = {
       insurance: {
         Row: {
           compagnie: string
+          cout: number | null
           date_debut: string | null
           date_fin: string | null
           numero_police: string
+          scan_url: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           compagnie?: string
+          cout?: number | null
           date_debut?: string | null
           date_fin?: string | null
           numero_police?: string
+          scan_url?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           compagnie?: string
+          cout?: number | null
           date_debut?: string | null
           date_fin?: string | null
           numero_police?: string
+          scan_url?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -266,6 +272,39 @@ export type Database = {
           matricule?: string
           modele?: string
           transmission?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      vignette: {
+        Row: {
+          compagnie: string
+          cout: number | null
+          date_debut: string | null
+          date_fin: string | null
+          numero: string
+          scan_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          compagnie?: string
+          cout?: number | null
+          date_debut?: string | null
+          date_fin?: string | null
+          numero?: string
+          scan_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          compagnie?: string
+          cout?: number | null
+          date_debut?: string | null
+          date_fin?: string | null
+          numero?: string
+          scan_url?: string | null
           updated_at?: string
           user_id?: string
         }
