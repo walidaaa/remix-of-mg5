@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { useAppData } from "@/lib/use-app-data";
 import { updateVehicle, type Vehicle, MAINTENANCE_LABELS, type MaintenanceType } from "@/lib/storage";
