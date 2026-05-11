@@ -22,9 +22,12 @@ export const Route = createFileRoute("/")({
 
 function Dashboard() {
   const data = useAppData();
+  const { isAdmin, checked } = useIsAdmin();
   const v = data.vehicle;
   const next = getNextOilChange(data);
   const [km, setKm] = useState("");
+
+  if (checked && isAdmin) return <AdminOverview view="dashboard" />;
 
   if (!data.loaded) {
     return (
