@@ -138,6 +138,7 @@ function Dashboard() {
           </>
         }
         cta={{ to: "/vidanges", label: "Gérer les vidanges" }}
+        resetEnabled={next.kmRestants !== null && next.kmRestants <= 0}
         onReset={async () => {
           const last = data.oilChanges[0];
           await addOilChange({
@@ -245,7 +246,7 @@ function StatCard({ icon: Icon, label, value, unit, tone }: { icon: any; label: 
   );
 }
 
-function AlertBanner({ tone, title, body, cta, onReset }: { tone: string; title: string; body: React.ReactNode; cta: { to: string; label: string }; onReset?: () => void | Promise<void> }) {
+function AlertBanner({ tone, title, body, cta, onReset, resetEnabled = true }: { tone: string; title: string; body: React.ReactNode; cta: { to: string; label: string }; onReset?: () => void | Promise<void>; resetEnabled?: boolean }) {
   const cls = tone === "destructive" ? "bg-destructive/10 border-destructive"
     : tone === "warning" ? "bg-warning/10 border-warning" : "bg-success/10 border-success";
   const Icon = tone === "success" ? CheckCircle2 : AlertTriangle;
@@ -263,8 +264,10 @@ function AlertBanner({ tone, title, body, cta, onReset }: { tone: string; title:
             </Link>
             {onReset && (
               <button
-                onClick={() => onReset()}
-                className="inline-flex items-center gap-1.5 text-sm bg-primary text-primary-foreground px-3 py-1.5 rounded-md font-medium hover:opacity-90"
+                onClick={() => resetEnabled && onReset()}
+                disabled={!resetEnabled}
+                title={resetEnabled ? "Enregistrer la vidange au km actuel" : "Disponible quand le kilométrage dépasse la prochaine vidange"}
+                className="inline-flex items-center gap-1.5 text-sm bg-primary text-primary-foreground px-3 py-1.5 rounded-md font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <RotateCcw size={14} /> Reset vidange
               </button>
