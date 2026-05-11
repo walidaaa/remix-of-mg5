@@ -271,7 +271,8 @@ function UsersTab() {
             <TableBody>
               {users.map((u) => {
                 const km = u.vehicle?.km_actuel ?? 0;
-                const overdue = km > 10000;
+                const interval = u.vehicle?.intervalle_vidange ?? 10000;
+                const overdue = !!u.vehicle && km >= interval;
                 return (
                   <TableRow key={u.id}>
                     <TableCell className="font-medium">{u.username ?? "—"}</TableCell>
@@ -303,8 +304,13 @@ function UsersTab() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="inline-flex flex-wrap gap-1 justify-end">
-                        {overdue && u.vehicle && (
-                          <Button size="sm" variant="secondary" onClick={() => onResetVidange(u.id, u.username)} title="Approuver / Reset vidange">
+                        {u.vehicle && (
+                          <Button
+                            size="sm"
+                            variant={overdue ? "default" : "secondary"}
+                            onClick={() => onResetVidange(u.id, u.username)}
+                            title="Approuver / Reset vidange (KM → 0)"
+                          >
                             <RotateCcw size={14} /> Reset vidange
                           </Button>
                         )}
