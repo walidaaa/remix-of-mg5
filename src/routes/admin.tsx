@@ -242,15 +242,82 @@ function UsersTab() {
 
   return (
     <div className="grid gap-4">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center gap-2 flex-wrap">
         <div className="text-sm text-muted-foreground">{users.length} utilisateur(s)</div>
-        <button
-          onClick={() => setShowForm((s) => !s)}
-          className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold shadow-glow"
-        >
-          <Plus size={16} /> Nouveau
-        </button>
+        <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={() => { setShowPwdPanel((s) => !s); setPwdMsg(null); }}
+            className="inline-flex items-center gap-2 bg-secondary text-foreground px-4 py-2 rounded-lg text-sm font-semibold border border-border hover:bg-secondary/80"
+          >
+            <KeyRound size={16} /> Changer mot de passe
+          </button>
+          <button
+            onClick={() => setShowForm((s) => !s)}
+            className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold shadow-glow"
+          >
+            <Plus size={16} /> Nouveau
+          </button>
+        </div>
       </div>
+
+      {showPwdPanel && (
+        <form onSubmit={submitChangePwd} className="rounded-2xl gradient-card p-5 shadow-card grid gap-3 md:grid-cols-[1fr_1fr_auto]">
+          <label className="block">
+            <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1.5">Utilisateur</div>
+            <select
+              value={pwdUserId}
+              onChange={(e) => setPwdUserId(e.target.value)}
+              required
+              className="w-full bg-input border border-border rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="">— Sélectionner —</option>
+              {users.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.username ?? "(sans nom)"} {u.role === "admin" ? "· admin" : ""}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block">
+            <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1.5">Nouveau mot de passe</div>
+            <div className="relative">
+              <input
+                type={showNewPwd ? "text" : "password"}
+                value={newPwd}
+                onChange={(e) => setNewPwd(e.target.value)}
+                required
+                minLength={6}
+                placeholder="Min. 6 caractères"
+                className="w-full bg-input border border-border rounded-lg px-3 pr-10 py-2.5 focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+              <button
+                type="button"
+                onClick={() => setShowNewPwd((s) => !s)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-foreground"
+                aria-label={showNewPwd ? "Masquer" : "Afficher"}
+              >
+                {showNewPwd ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </label>
+          <div className="flex md:items-end">
+            <button
+              disabled={pwdBusy}
+              className="w-full md:w-auto inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 rounded-lg font-semibold shadow-glow disabled:opacity-50"
+            >
+              {pwdBusy ? <Loader2 className="animate-spin" size={16} /> : <KeyRound size={16} />}
+              Mettre à jour
+            </button>
+          </div>
+          {pwdMsg && (
+            <div className={`md:col-span-3 text-sm p-3 rounded-lg ${
+              pwdMsg.type === "ok" ? "bg-success/10 text-success border border-success/20" : "bg-destructive/10 text-destructive border border-destructive/20"
+            }`}>
+              {pwdMsg.text}
+            </div>
+          )}
+        </form>
+      )}
 
       {showForm && (
         <form onSubmit={submit} className="rounded-2xl gradient-card p-5 shadow-card grid gap-3 md:grid-cols-5">
