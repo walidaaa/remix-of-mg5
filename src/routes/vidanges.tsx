@@ -30,6 +30,7 @@ function OilChangesPage() {
   const data = useAppData();
   const { isAdmin, checked } = useIsAdmin();
   const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     date: new Date().toISOString().slice(0, 10),
     km: data.vehicle?.kmActuel ?? 0,
@@ -39,18 +40,24 @@ function OilChangesPage() {
     notes: "",
   });
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    addOilChange({
-      date: new Date(form.date).toISOString(),
-      km: Number(form.km),
-      typeHuile: form.typeHuile,
-      filtreHuile: form.filtreHuile,
-      cout: form.cout ? Number(form.cout) : undefined,
-      notes: form.notes || undefined,
-    });
-    setOpen(false);
-    setForm((f) => ({ ...f, filtreHuile: "", cout: "", notes: "" }));
+    if (saving) return;
+    setSaving(true);
+    try {
+      await addOilChange({
+        date: new Date(form.date).toISOString(),
+        km: Number(form.km),
+        typeHuile: form.typeHuile,
+        filtreHuile: form.filtreHuile,
+        cout: form.cout ? Number(form.cout) : undefined,
+        notes: form.notes || undefined,
+      });
+      setOpen(false);
+      setForm((f) => ({ ...f, filtreHuile: "", cout: "", notes: "" }));
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (checked && isAdmin) return <AdminOverview view="oil" />;
@@ -169,7 +176,7 @@ function OilChangesPage() {
             </Row>
             <div className="flex gap-2 justify-end pt-2">
               <button type="button" onClick={() => setOpen(false)} className="px-4 py-2 rounded-lg bg-secondary">Annuler</button>
-              <button className="px-5 py-2 rounded-lg bg-primary text-primary-foreground font-semibold">Enregistrer</button>
+              <button type="submit" disabled={saving} className="px-5 py-2 rounded-lg bg-primary text-primary-foreground font-semibold disabled:opacity-50">{saving ? "Enregistrement…" : "Enregistrer"}</button>
             </div>
             <style>{`.input{width:100%;background:var(--color-input);border:1px solid var(--color-border);border-radius:.5rem;padding:.6rem .9rem;color:var(--color-foreground);outline:none}.input:focus{border-color:var(--color-ring)}`}</style>
           </form>
