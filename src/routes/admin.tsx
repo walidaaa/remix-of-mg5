@@ -513,7 +513,7 @@ function VehiclesTab() {
                       </TableCell>
                     </TableRow>
                   )}
-                </>
+                </Fragment>
               );
             })}
             {filtered.length === 0 && (
