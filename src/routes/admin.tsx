@@ -12,8 +12,11 @@ import {
   listBrands,
   adminAddBrand,
   adminDeleteBrand,
+  listModels,
+  adminAddModel,
+  adminDeleteModel,
 } from "@/lib/admin.functions";
-import { Plus, Trash2, KeyRound, ShieldCheck, Users, Tag, Loader2 } from "lucide-react";
+import { Plus, Trash2, KeyRound, ShieldCheck, Users, Tag, Loader2, Car } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Admin — MG5 Maintenance" }] }),
@@ -32,7 +35,7 @@ type Brand = { id: string; name: string };
 function AdminPage() {
   const { user, loading } = useAuth();
   const nav = useNavigate();
-  const [tab, setTab] = useState<"users" | "brands">("users");
+  const [tab, setTab] = useState<"users" | "brands" | "models">("users");
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -77,9 +80,12 @@ function AdminPage() {
         <TabBtn active={tab === "brands"} onClick={() => setTab("brands")} icon={<Tag size={16} />}>
           Marques
         </TabBtn>
+        <TabBtn active={tab === "models"} onClick={() => setTab("models")} icon={<Car size={16} />}>
+          Modèles
+        </TabBtn>
       </div>
 
-      {tab === "users" ? <UsersTab /> : <BrandsTab />}
+      {tab === "users" ? <UsersTab /> : tab === "brands" ? <BrandsTab /> : <ModelsTab />}
     </AppShell>
   );
 }
@@ -105,14 +111,17 @@ function UsersTab() {
   const del = useServerFn(adminDeleteUser);
   const reset = useServerFn(adminResetPassword);
   const fetchBrands = useServerFn(listBrands);
+  const fetchModels = useServerFn(listModels);
 
   const [users, setUsers] = useState<UserRow[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
+  const [models, setModels] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [brand, setBrand] = useState("");
+  const [model, setModel] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -129,13 +138,21 @@ function UsersTab() {
   };
   useEffect(() => { refresh(); }, []);
 
+  useEffect(() => {
+    if (!brand) { setModels([]); setModel(""); return; }
+    fetchModels({ data: { brandName: brand } }).then((m) => {
+      setModels(m);
+      setModel((curr) => (m.find((x) => x.name === curr) ? curr : ""));
+    }).catch(() => setModels([]));
+  }, [brand, fetchModels]);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErr(null);
     setBusy(true);
     try {
-      await create({ data: { username, password, brand: brand || undefined } });
-      setUsername(""); setPassword("");
+      await create({ data: { username, password, brand: brand || undefined, model: model || undefined } });
+      setUsername(""); setPassword(""); setModel("");
       setShowForm(false);
       await refresh();
     } catch (e: any) {
@@ -174,7 +191,7 @@ function UsersTab() {
       </div>
 
       {showForm && (
-        <form onSubmit={submit} className="rounded-2xl gradient-card p-5 shadow-card grid gap-3 md:grid-cols-4">
+        <form onSubmit={submit} className="rounded-2xl gradient-card p-5 shadow-card grid gap-3 md:grid-cols-5">
           <input
             placeholder="Username" required minLength={3} value={username}
             onChange={(e) => setUsername(e.target.value)}
@@ -192,10 +209,18 @@ function UsersTab() {
             <option value="">— Marque —</option>
             {brands.map((b) => <option key={b.id} value={b.name}>{b.name}</option>)}
           </select>
+          <select
+            value={model} onChange={(e) => setModel(e.target.value)}
+            className="bg-input border border-border rounded-lg px-3 py-2"
+            disabled={!brand || models.length === 0}
+          >
+            <option value="">{models.length ? "— Modèle —" : "Aucun modèle"}</option>
+            {models.map((m) => <option key={m.id} value={m.name}>{m.name}</option>)}
+          </select>
           <button disabled={busy} className="bg-primary text-primary-foreground rounded-lg px-4 py-2 font-semibold disabled:opacity-50">
             {busy ? "..." : "Créer"}
           </button>
-          {err && <div className="md:col-span-4 text-sm text-destructive">{err}</div>}
+          {err && <div className="md:col-span-5 text-sm text-destructive">{err}</div>}
         </form>
       )}
 
@@ -307,6 +332,94 @@ function BrandsTab() {
             </button>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function ModelsTab() {
+  const fetchBrands = useServerFn(listBrands);
+  const fetchModels = useServerFn(listModels);
+  const add = useServerFn(adminAddModel);
+  const del = useServerFn(adminDeleteModel);
+
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [brandId, setBrandId] = useState("");
+  const [models, setModels] = useState<{ id: string; name: string }[]>([]);
+  const [name, setName] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchBrands().then((b) => {
+      setBrands(b);
+      if (!brandId && b[0]) setBrandId(b[0].id);
+    });
+  }, []);
+
+  const refresh = async () => {
+    if (!brandId) return;
+    const m = await fetchModels({ data: { brandId } });
+    setModels(m);
+  };
+  useEffect(() => { refresh(); }, [brandId]);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErr(null);
+    setBusy(true);
+    try {
+      await add({ data: { brandId, name } });
+      setName("");
+      refresh();
+    } catch (e: any) {
+      setErr(e?.message ?? "Erreur");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="grid gap-4">
+      <div className="flex gap-2 items-center">
+        <label className="text-sm text-muted-foreground">Marque :</label>
+        <select
+          value={brandId} onChange={(e) => setBrandId(e.target.value)}
+          className="bg-input border border-border rounded-lg px-3 py-2"
+        >
+          {brands.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+        </select>
+      </div>
+
+      <form onSubmit={submit} className="flex gap-2">
+        <input
+          value={name} onChange={(e) => setName(e.target.value)}
+          required maxLength={80} placeholder="Nouveau modèle (ex: MG5 Luxury)"
+          className="flex-1 bg-input border border-border rounded-lg px-3 py-2"
+        />
+        <button disabled={busy || !brandId} className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg font-semibold disabled:opacity-50">
+          <Plus size={16} /> Ajouter
+        </button>
+      </form>
+      {err && <div className="text-sm text-destructive">{err}</div>}
+
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+        {models.map((m) => (
+          <div key={m.id} className="flex items-center justify-between bg-secondary/40 rounded-lg px-3 py-2">
+            <span className="font-medium">{m.name}</span>
+            <button
+              onClick={async () => {
+                if (!confirm(`Supprimer "${m.name}" ?`)) return;
+                await del({ data: { id: m.id } });
+                refresh();
+              }}
+              className="text-destructive hover:bg-destructive/10 p-1 rounded"
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+        ))}
+        {models.length === 0 && <div className="text-sm text-muted-foreground col-span-full">Aucun modèle.</div>}
       </div>
     </div>
   );

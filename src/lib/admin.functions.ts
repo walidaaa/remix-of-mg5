@@ -91,10 +91,11 @@ export const setupFirstAdmin = createServerFn({ method: "POST" })
 // Admin: create a regular user
 export const adminCreateUser = createServerFn({ method: "POST" })
   .middleware([attachSupabaseAuth, requireSupabaseAuth])
-  .inputValidator((d: { username: string; password: string; brand?: string }) => ({
+  .inputValidator((d: { username: string; password: string; brand?: string; model?: string }) => ({
     username: usernameSchema.parse(d.username),
     password: passwordSchema.parse(d.password),
     brand: d.brand ? z.string().trim().max(50).parse(d.brand) : undefined,
+    model: d.model ? z.string().trim().max(80).parse(d.model) : undefined,
   }))
   .handler(async ({ data, context }) => {
     await ensureAdmin(context.userId);
@@ -119,7 +120,7 @@ export const adminCreateUser = createServerFn({ method: "POST" })
       await supabaseAdmin.from("vehicles").upsert({
         user_id: created.user.id,
         marque: data.brand,
-        modele: "",
+        modele: data.model ?? "",
         couleur: "",
         matricule: "",
         transmission: "automatique",
@@ -223,6 +224,47 @@ export const adminDeleteBrand = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await ensureAdmin(context.userId);
     const { error } = await supabaseAdmin.from("car_brands").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+// Models
+export const listModels = createServerFn({ method: "POST" })
+  .middleware([attachSupabaseAuth, requireSupabaseAuth])
+  .inputValidator((d: { brandId?: string; brandName?: string }) => d)
+  .handler(async ({ data, context }) => {
+    let brandId = data.brandId;
+    if (!brandId && data.brandName) {
+      const { data: b } = await context.supabase
+        .from("car_brands").select("id").eq("name", data.brandName).maybeSingle();
+      brandId = b?.id;
+    }
+    if (!brandId) return [];
+    const { data: rows, error } = await context.supabase
+      .from("car_models").select("id, name, brand_id").eq("brand_id", brandId).order("name");
+    if (error) throw new Error(error.message);
+    return rows ?? [];
+  });
+
+export const adminAddModel = createServerFn({ method: "POST" })
+  .middleware([attachSupabaseAuth, requireSupabaseAuth])
+  .inputValidator((d: { brandId: string; name: string }) => ({
+    brandId: z.string().uuid().parse(d.brandId),
+    name: z.string().trim().min(1).max(80).parse(d.name),
+  }))
+  .handler(async ({ data, context }) => {
+    await ensureAdmin(context.userId);
+    const { error } = await supabaseAdmin.from("car_models").insert({ brand_id: data.brandId, name: data.name });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const adminDeleteModel = createServerFn({ method: "POST" })
+  .middleware([attachSupabaseAuth, requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => ({ id: z.string().uuid().parse(d.id) }))
+  .handler(async ({ data, context }) => {
+    await ensureAdmin(context.userId);
+    const { error } = await supabaseAdmin.from("car_models").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
