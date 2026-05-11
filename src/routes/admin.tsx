@@ -122,6 +122,8 @@ function UsersTab() {
   const create = useServerFn(adminCreateUser);
   const del = useServerFn(adminDeleteUser);
   const reset = useServerFn(adminResetPassword);
+  const resetVidange = useServerFn(adminResetVidange);
+  const setBlocked = useServerFn(adminSetBlocked);
   const fetchBrands = useServerFn(listBrands);
   const fetchModels = useServerFn(listModels);
 
@@ -188,6 +190,21 @@ function UsersTab() {
     } catch (e: any) {
       alert(e?.message ?? "Erreur");
     }
+  };
+  const onResetVidange = async (id: string, uname: string | null) => {
+    if (!confirm(`Approuver et réinitialiser la vidange de "${uname}" (KM → 0) ?`)) return;
+    try {
+      await resetVidange({ data: { userId: id } });
+      await refresh();
+    } catch (e: any) { alert(e?.message ?? "Erreur"); }
+  };
+  const onToggleBlock = async (id: string, uname: string | null, blocked: boolean) => {
+    const action = blocked ? "débloquer" : "bloquer";
+    if (!confirm(`Voulez-vous ${action} "${uname}" ?`)) return;
+    try {
+      await setBlocked({ data: { userId: id, blocked: !blocked } });
+      await refresh();
+    } catch (e: any) { alert(e?.message ?? "Erreur"); }
   };
 
   return (
