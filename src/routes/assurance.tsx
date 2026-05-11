@@ -265,6 +265,8 @@ function DocumentCard({
   status: "ok" | "bientot" | "expiree" | null;
   j: number | null;
 }) {
+  const { t } = useLang();
+  const { REF1_LABEL, REF2_LABEL } = useDocLabels();
   const [editing, setEditing] = useState(!value);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
