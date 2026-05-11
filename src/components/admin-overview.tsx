@@ -130,6 +130,40 @@ function PaginationBar({
   );
 }
 
+function SearchBar({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
+  return (
+    <div className="mb-5 relative max-w-xl">
+      <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full pl-9 pr-9 py-2.5 rounded-xl bg-card border border-border focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm shadow-card transition"
+      />
+      {value && (
+        <button
+          onClick={() => onChange("")}
+          className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md hover:bg-secondary text-muted-foreground"
+          aria-label="Effacer"
+        >
+          <X size={14} />
+        </button>
+      )}
+    </div>
+  );
+}
+
+function useFilter<T>(items: T[], query: string, getFields: (item: T) => Array<string | number | null | undefined>) {
+  return useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return items;
+    return items.filter((it) =>
+      getFields(it).some((f) => f != null && String(f).toLowerCase().includes(q))
+    );
+  }, [items, query, getFields]);
+}
+
 function Header({ icon: Icon, title, subtitle, count }: { icon: any; title: string; subtitle: string; count?: number }) {
   return (
     <div className="mb-8">
