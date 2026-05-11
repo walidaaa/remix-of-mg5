@@ -172,6 +172,17 @@ export async function fetchAppData(): Promise<AppData> {
       }
     : null;
 
+  const vehicleDoc: VehicleDoc | null = (vdoc as any).data
+    ? {
+        organisme: (vdoc as any).data.organisme ?? "",
+        numero: (vdoc as any).data.numero ?? "",
+        dateDebut: (vdoc as any).data.date_debut ?? "",
+        dateFin: (vdoc as any).data.date_fin ?? "",
+        cout: (vdoc as any).data.cout != null ? Number((vdoc as any).data.cout) : undefined,
+        scanUrl: (vdoc as any).data.scan_url ?? undefined,
+      }
+    : null;
+
   const maintenance: MaintenanceItem[] = (maint.data ?? []).map((m) => ({
     id: m.id,
     type: m.type as MaintenanceType,
@@ -183,7 +194,7 @@ export async function fetchAppData(): Promise<AppData> {
     notes: m.notes ?? undefined,
   }));
 
-  return { vehicle, oilChanges, insurance, vignette, maintenance };
+  return { vehicle, oilChanges, insurance, vignette, vehicleDoc, maintenance };
 }
 
 export async function updateVehicle(v: Vehicle) {
