@@ -24,14 +24,24 @@ function Dashboard() {
   const next = getNextOilChange(data);
   const [km, setKm] = useState("");
 
+  if (!data.loaded) {
+    return (
+      <AppShell>
+        <div className="rounded-2xl overflow-hidden shadow-card">
+          <div className="relative h-56 md:h-72 bg-card animate-pulse" />
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6">
+          {[0,1,2,3].map((i) => <div key={i} className="h-24 rounded-xl bg-card animate-pulse" />)}
+        </div>
+      </AppShell>
+    );
+  }
+
   if (!v) {
     return (
       <AppShell>
         <div className="rounded-2xl overflow-hidden shadow-card">
-          <div className="relative h-64 md:h-80">
-            <img src={getBrandImage(null)} alt="Vehicle" className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
-          </div>
+          <div className="relative h-64 md:h-80 bg-card" />
           <div className="p-8 text-center -mt-16 relative">
             <h1 className="text-4xl mb-3">Bienvenue dans MG5 Maintenance</h1>
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">
