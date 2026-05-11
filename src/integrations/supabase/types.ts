@@ -235,6 +235,39 @@ export type Database = {
         }
         Relationships: []
       }
+      vehicle_doc: {
+        Row: {
+          cout: number | null
+          date_debut: string | null
+          date_fin: string | null
+          numero: string
+          organisme: string
+          scan_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cout?: number | null
+          date_debut?: string | null
+          date_fin?: string | null
+          numero?: string
+          organisme?: string
+          scan_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cout?: number | null
+          date_debut?: string | null
+          date_fin?: string | null
+          numero?: string
+          organisme?: string
+          scan_url?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       vehicles: {
         Row: {
           annee: number

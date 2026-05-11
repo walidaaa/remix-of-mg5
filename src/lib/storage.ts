@@ -41,6 +41,15 @@ export type Vignette = {
   scanUrl?: string;
 };
 
+export type VehicleDoc = {
+  organisme: string;
+  numero: string;
+  dateDebut: string;
+  dateFin: string;
+  cout?: number;
+  scanUrl?: string;
+};
+
 export type MaintenanceType =
   | "filtre-air"
   | "filtre-carburant"
@@ -88,10 +97,11 @@ export type AppData = {
   oilChanges: OilChange[];
   insurance: Insurance | null;
   vignette: Vignette | null;
+  vehicleDoc: VehicleDoc | null;
   maintenance: MaintenanceItem[];
 };
 
-export const emptyData: AppData = { vehicle: null, oilChanges: [], insurance: null, vignette: null, maintenance: [] };
+export const emptyData: AppData = { vehicle: null, oilChanges: [], insurance: null, vignette: null, vehicleDoc: null, maintenance: [] };
 
 const REFRESH_EVENT = "mg5-data-update";
 function ping() {
@@ -108,12 +118,13 @@ export async function fetchAppData(): Promise<AppData> {
   const userId = await uid();
   if (!userId) return emptyData;
 
-  const [veh, oils, ins, maint, vig] = await Promise.all([
+  const [veh, oils, ins, maint, vig, vdoc] = await Promise.all([
     supabase.from("vehicles").select("*").eq("user_id", userId).maybeSingle(),
     supabase.from("oil_changes").select("*").eq("user_id", userId).order("km", { ascending: false }),
     supabase.from("insurance").select("*").eq("user_id", userId).maybeSingle(),
     supabase.from("maintenance_items").select("*").eq("user_id", userId).order("date", { ascending: false }),
     supabase.from("vignette").select("*").eq("user_id", userId).maybeSingle(),
+    supabase.from("vehicle_doc" as any).select("*").eq("user_id", userId).maybeSingle(),
   ]);
 
   const vehicle: Vehicle | null = veh.data
@@ -161,6 +172,17 @@ export async function fetchAppData(): Promise<AppData> {
       }
     : null;
 
+  const vehicleDoc: VehicleDoc | null = (vdoc as any).data
+    ? {
+        organisme: (vdoc as any).data.organisme ?? "",
+        numero: (vdoc as any).data.numero ?? "",
+        dateDebut: (vdoc as any).data.date_debut ?? "",
+        dateFin: (vdoc as any).data.date_fin ?? "",
+        cout: (vdoc as any).data.cout != null ? Number((vdoc as any).data.cout) : undefined,
+        scanUrl: (vdoc as any).data.scan_url ?? undefined,
+      }
+    : null;
+
   const maintenance: MaintenanceItem[] = (maint.data ?? []).map((m) => ({
     id: m.id,
     type: m.type as MaintenanceType,
@@ -172,7 +194,7 @@ export async function fetchAppData(): Promise<AppData> {
     notes: m.notes ?? undefined,
   }));
 
-  return { vehicle, oilChanges, insurance, vignette, maintenance };
+  return { vehicle, oilChanges, insurance, vignette, vehicleDoc, maintenance };
 }
 
 export async function updateVehicle(v: Vehicle) {
@@ -281,7 +303,22 @@ export async function updateVignette(v: Vignette) {
   ping();
 }
 
-export async function uploadDocument(kind: "assurance" | "vignette", file: File): Promise<string | null> {
+export async function updateVehicleDoc(v: VehicleDoc) {
+  const userId = await uid();
+  if (!userId) return;
+  await supabase.from("vehicle_doc" as any).upsert({
+    user_id: userId,
+    organisme: v.organisme,
+    numero: v.numero,
+    date_debut: v.dateDebut || null,
+    date_fin: v.dateFin || null,
+    cout: v.cout ?? null,
+    scan_url: v.scanUrl ?? null,
+  } as any);
+  ping();
+}
+
+export async function uploadDocument(kind: "assurance" | "vignette" | "vehicle", file: File): Promise<string | null> {
   const userId = await uid();
   if (!userId) return null;
   const ext = file.name.split(".").pop() || "jpg";

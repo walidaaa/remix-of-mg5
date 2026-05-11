@@ -4,10 +4,12 @@ import { useAppData } from "@/lib/use-app-data";
 import {
   updateInsurance,
   updateVignette,
+  updateVehicleDoc,
   uploadDocument,
   getDocumentUrl,
   type Insurance,
   type Vignette,
+  type VehicleDoc,
 } from "@/lib/storage";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -19,6 +21,7 @@ import {
   Camera,
   Image as ImageIcon,
   ScrollText,
+  Car,
   Loader2,
   Eye,
 } from "lucide-react";
@@ -62,14 +65,16 @@ function InsurancePage() {
 
   const insJ = daysUntil(data.insurance?.dateFin);
   const vigJ = daysUntil(data.vignette?.dateFin);
+  const vehJ = daysUntil(data.vehicleDoc?.dateFin);
   const insStatus = statusOf(insJ);
   const vigStatus = statusOf(vigJ);
+  const vehStatus = statusOf(vehJ);
 
   return (
     <AppShell>
       <div className="mb-8">
-        <h1 className="text-3xl mb-2">Assurance & Vignette</h1>
-        <p className="text-muted-foreground">Polices, échéances, scans et coûts (DA).</p>
+        <h1 className="text-3xl mb-2">Documents véhicule</h1>
+        <p className="text-muted-foreground">Assurance, vignette, carte grise — dates, scans et coûts (DA).</p>
       </div>
 
       {/* Récap table */}
@@ -109,11 +114,22 @@ function InsurancePage() {
               cout={data.vignette?.cout}
               status={vigStatus}
             />
+            <RecapRow
+              label="Carte grise"
+              icon={Car}
+              ref1={data.vehicleDoc?.organisme}
+              ref2={data.vehicleDoc?.numero}
+              dateDebut={data.vehicleDoc?.dateDebut}
+              dateFin={data.vehicleDoc?.dateFin}
+              j={vehJ}
+              cout={data.vehicleDoc?.cout}
+              status={vehStatus}
+            />
           </TableBody>
         </Table>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid lg:grid-cols-2 xl:grid-cols-3 gap-6">
         <DocumentCard
           kind="assurance"
           title="Police d'assurance"
@@ -129,6 +145,14 @@ function InsurancePage() {
           value={data.vignette}
           status={vigStatus}
           j={vigJ}
+        />
+        <DocumentCard
+          kind="vehicle"
+          title="Carte grise / Permis"
+          icon={Car}
+          value={data.vehicleDoc}
+          status={vehStatus}
+          j={vehJ}
         />
       </div>
     </AppShell>
@@ -195,7 +219,28 @@ function RecapRow({
   );
 }
 
-type DocKind = "assurance" | "vignette";
+type DocKind = "assurance" | "vignette" | "vehicle";
+
+const REF1_KEY: Record<DocKind, string> = {
+  assurance: "compagnie",
+  vignette: "compagnie",
+  vehicle: "organisme",
+};
+const REF2_KEY: Record<DocKind, string> = {
+  assurance: "numeroPolice",
+  vignette: "numero",
+  vehicle: "numero",
+};
+const REF1_LABEL: Record<DocKind, string> = {
+  assurance: "Compagnie",
+  vignette: "Agence vignette",
+  vehicle: "Organisme",
+};
+const REF2_LABEL: Record<DocKind, string> = {
+  assurance: "N° police",
+  vignette: "N° vignette",
+  vehicle: "N° immatriculation / carte",
+};
 
 function DocumentCard({
   kind,
@@ -208,7 +253,7 @@ function DocumentCard({
   kind: DocKind;
   title: string;
   icon: any;
-  value: Insurance | Vignette | null;
+  value: Insurance | Vignette | VehicleDoc | null;
   status: "ok" | "bientot" | "expiree" | null;
   j: number | null;
 }) {
@@ -220,26 +265,16 @@ function DocumentCard({
   const fileRef = useRef<HTMLInputElement>(null);
   const camRef = useRef<HTMLInputElement>(null);
 
-  const baseInsurance: Insurance = {
-    compagnie: "",
-    numeroPolice: "",
-    dateDebut: new Date().toISOString().slice(0, 10),
-    dateFin: "",
-    cout: undefined,
-    scanUrl: undefined,
-  };
-  const baseVignette: Vignette = {
-    compagnie: "",
-    numero: "",
+  const baseForm: any = {
+    [REF1_KEY[kind]]: "",
+    [REF2_KEY[kind]]: "",
     dateDebut: new Date().toISOString().slice(0, 10),
     dateFin: "",
     cout: undefined,
     scanUrl: undefined,
   };
 
-  const [form, setForm] = useState<Insurance | Vignette>(
-    (value as any) ?? (kind === "assurance" ? baseInsurance : baseVignette),
-  );
+  const [form, setForm] = useState<any>((value as any) ?? baseForm);
 
   useEffect(() => {
     if (value) setForm(value as any);
@@ -255,6 +290,12 @@ function DocumentCard({
 
   const set = (k: string, v: any) => setForm((f: any) => ({ ...f, [k]: v }));
 
+  const persist = async (next: any) => {
+    if (kind === "assurance") await updateInsurance(next as Insurance);
+    else if (kind === "vignette") await updateVignette(next as Vignette);
+    else await updateVehicleDoc(next as VehicleDoc);
+  };
+
   const onFile = async (file: File | null) => {
     if (!file) return;
     setUploading(true);
@@ -263,8 +304,7 @@ function DocumentCard({
       if (path) {
         const next: any = { ...form, scanUrl: path };
         setForm(next);
-        if (kind === "assurance") await updateInsurance(next);
-        else await updateVignette(next);
+        await persist(next);
       }
     } finally {
       setUploading(false);
@@ -276,20 +316,18 @@ function DocumentCard({
     if (saving) return;
     setSaving(true);
     try {
-      if (kind === "assurance") await updateInsurance(form as Insurance);
-      else await updateVignette(form as Vignette);
+      await persist(form);
       setEditing(false);
     } finally {
       setSaving(false);
     }
   };
 
-  const dateDebut = (form as any).dateDebut as string;
-  const dateFin = (form as any).dateFin as string;
-  const cout = (form as any).cout as number | undefined;
-  const ref1 = kind === "assurance" ? (form as Insurance).compagnie : (form as Vignette).compagnie;
-  const ref2Key = kind === "assurance" ? "numeroPolice" : "numero";
-  const ref2 = (form as any)[ref2Key];
+  const dateDebut = form.dateDebut as string;
+  const dateFin = form.dateFin as string;
+  const cout = form.cout as number | undefined;
+  const ref1 = form[REF1_KEY[kind]] ?? "";
+  const ref2 = form[REF2_KEY[kind]] ?? "";
 
   const ringClass =
     status === "expiree"
@@ -310,7 +348,7 @@ function DocumentCard({
           </div>
           <div className="min-w-0">
             <div className="text-xs uppercase tracking-wider text-muted-foreground">{title}</div>
-            <div className="text-lg font-display truncate">{value?.compagnie || "Non renseigné"}</div>
+            <div className="text-lg font-display truncate">{(value as any)?.[REF1_KEY[kind]] || "Non renseigné"}</div>
           </div>
         </div>
         {value && !editing && (
@@ -355,11 +393,11 @@ function DocumentCard({
         ) : (
           <form onSubmit={submit} className="grid gap-4">
             <div className="grid sm:grid-cols-2 gap-3">
-              <Field label="Compagnie / Agence">
-                <input value={ref1} onChange={(e) => set("compagnie", e.target.value)} className="input" />
+              <Field label={REF1_LABEL[kind]}>
+                <input value={ref1} onChange={(e) => set(REF1_KEY[kind], e.target.value)} className="input" />
               </Field>
-              <Field label={kind === "assurance" ? "N° police" : "N° vignette"}>
-                <input value={ref2 || ""} onChange={(e) => set(ref2Key, e.target.value)} className="input font-mono" />
+              <Field label={REF2_LABEL[kind]}>
+                <input value={ref2 || ""} onChange={(e) => set(REF2_KEY[kind], e.target.value)} className="input font-mono" />
               </Field>
               <Field label="Date début">
                 <input type="date" value={dateDebut} onChange={(e) => set("dateDebut", e.target.value)} className="input" />
