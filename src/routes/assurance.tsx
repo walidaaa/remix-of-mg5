@@ -21,6 +21,7 @@ import {
   Camera,
   Image as ImageIcon,
   ScrollText,
+  Car,
   Loader2,
   Eye,
 } from "lucide-react";
