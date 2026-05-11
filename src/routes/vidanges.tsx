@@ -4,6 +4,15 @@ import { useAppData } from "@/lib/use-app-data";
 import { addOilChange, deleteOilChange } from "@/lib/storage";
 import { useState } from "react";
 import { Plus, Trash2, Droplet } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/vidanges")({
   head: () => ({
@@ -71,51 +80,53 @@ function OilChangesPage() {
           <p className="text-muted-foreground">Aucune vidange enregistrée pour le moment.</p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {data.oilChanges.map((o) => (
-            <div key={o.id} className="rounded-xl gradient-card p-5 shadow-card flex gap-4 items-start">
-              <div className="bg-primary/15 text-primary rounded-lg p-3">
-                <Droplet size={22} />
-              </div>
-              <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                <div>
-                  <div className="text-xs text-muted-foreground">Date</div>
-                  <div className="font-medium">{new Date(o.date).toLocaleDateString("fr-FR")}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-muted-foreground">KM</div>
-                  <div className="font-medium">{o.km.toLocaleString("fr-FR")}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-muted-foreground">Huile</div>
-                  <div className="font-medium">{o.typeHuile}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-muted-foreground">Filtre</div>
-                  <div className="font-medium">{o.filtreHuile || "—"}</div>
-                </div>
-                {o.cout != null && (
-                  <div>
-                    <div className="text-xs text-muted-foreground">Coût</div>
-                    <div className="font-medium">{o.cout} DH</div>
-                  </div>
-                )}
-                {o.notes && (
-                  <div className="col-span-full">
-                    <div className="text-xs text-muted-foreground">Notes</div>
-                    <div>{o.notes}</div>
-                  </div>
-                )}
-              </div>
-              <button
-                onClick={() => confirm("Supprimer cette vidange ?") && deleteOilChange(o.id)}
-                className="text-muted-foreground hover:text-destructive p-2"
-                aria-label="Supprimer"
-              >
-                <Trash2 size={18} />
-              </button>
-            </div>
-          ))}
+        <div className="rounded-2xl border border-border overflow-hidden gradient-card shadow-card">
+          <Table>
+            <TableHeader className="bg-secondary/50">
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Kilométrage</TableHead>
+                <TableHead>Type d'huile</TableHead>
+                <TableHead>Filtre</TableHead>
+                <TableHead className="text-right">Coût</TableHead>
+                <TableHead>Notes</TableHead>
+                <TableHead className="w-[60px]"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.oilChanges.map((o) => (
+                <TableRow key={o.id}>
+                  <TableCell className="font-medium whitespace-nowrap">
+                    {new Date(o.date).toLocaleDateString("fr-FR")}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">{o.km.toLocaleString("fr-FR")} km</TableCell>
+                  <TableCell>
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-primary/15 text-primary text-xs font-medium">
+                      <Droplet size={12} /> {o.typeHuile}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{o.filtreHuile || "—"}</TableCell>
+                  <TableCell className="text-right whitespace-nowrap">
+                    {o.cout != null ? `${o.cout} DH` : "—"}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground max-w-[200px] truncate" title={o.notes ?? ""}>
+                    {o.notes || "—"}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => confirm("Supprimer cette vidange ?") && deleteOilChange(o.id)}
+                      className="text-muted-foreground hover:text-destructive"
+                      aria-label="Supprimer"
+                    >
+                      <Trash2 size={16} />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       )}
 

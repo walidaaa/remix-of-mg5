@@ -1,5 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Car, Droplet, ShieldCheck, ScanLine, Gauge, Wrench, LogOut, ShieldUser } from "lucide-react";
+import { Car, Droplet, ShieldCheck, Gauge, Wrench, LogOut, ShieldUser } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,7 +10,6 @@ const baseLinks = [
   { to: "/vidanges", label: "Vidanges", icon: Droplet },
   { to: "/entretien", label: "Entretien", icon: Wrench },
   { to: "/assurance", label: "Assurance", icon: ShieldCheck },
-  { to: "/scanner", label: "Scanner", icon: ScanLine },
 ] as const;
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -81,7 +80,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <main className="px-4 md:px-10 py-6 md:py-10 max-w-5xl mx-auto">{children}</main>
 
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-card/95 backdrop-blur border-t border-border">
-        <div className={`grid ${links.length === 7 ? "grid-cols-7" : "grid-cols-6"}`}>
+        <div className={`grid ${links.length === 6 ? "grid-cols-6" : "grid-cols-5"}`}>
           {links.map((l) => {
             const active = pathname === l.to;
             const Icon = l.icon;

@@ -132,7 +132,7 @@ export const adminCreateUser = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-// Admin: list all users (with role + username)
+// Admin: list all users (with role + username + vehicle km + blocked)
 export const adminListUsers = createServerFn({ method: "GET" })
   .middleware([attachSupabaseAuth, requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -140,7 +140,7 @@ export const adminListUsers = createServerFn({ method: "GET" })
 
     const { data: profiles, error: pErr } = await supabaseAdmin
       .from("profiles")
-      .select("id, username, display_name, created_at")
+      .select("id, username, display_name, created_at, blocked")
       .order("created_at", { ascending: false });
     if (pErr) throw new Error(pErr.message);
 
@@ -151,7 +151,7 @@ export const adminListUsers = createServerFn({ method: "GET" })
 
     const { data: vehicles } = await supabaseAdmin
       .from("vehicles")
-      .select("user_id, marque, modele, matricule");
+      .select("user_id, marque, modele, matricule, km_actuel, intervalle_vidange");
 
     const roleByUser = new Map((roles ?? []).map((r) => [r.user_id, r.role]));
     const vehByUser = new Map((vehicles ?? []).map((v) => [v.user_id, v]));
@@ -161,9 +161,38 @@ export const adminListUsers = createServerFn({ method: "GET" })
       username: p.username,
       display_name: p.display_name,
       created_at: p.created_at,
+      blocked: (p as any).blocked ?? false,
       role: (roleByUser.get(p.id) ?? "user") as "admin" | "user",
       vehicle: vehByUser.get(p.id) ?? null,
     }));
+  });
+
+// Admin: reset vidange (km_actuel back to 0) and unblock the user
+export const adminResetVidange = createServerFn({ method: "POST" })
+  .middleware([attachSupabaseAuth, requireSupabaseAuth])
+  .inputValidator((d: { userId: string }) => ({ userId: z.string().uuid().parse(d.userId) }))
+  .handler(async ({ data, context }) => {
+    await ensureAdmin(context.userId);
+    const { error: vErr } = await supabaseAdmin
+      .from("vehicles").update({ km_actuel: 0 }).eq("user_id", data.userId);
+    if (vErr) throw new Error(vErr.message);
+    await supabaseAdmin.from("profiles").update({ blocked: false }).eq("id", data.userId);
+    return { ok: true };
+  });
+
+// Admin: toggle blocked status
+export const adminSetBlocked = createServerFn({ method: "POST" })
+  .middleware([attachSupabaseAuth, requireSupabaseAuth])
+  .inputValidator((d: { userId: string; blocked: boolean }) => ({
+    userId: z.string().uuid().parse(d.userId),
+    blocked: z.boolean().parse(d.blocked),
+  }))
+  .handler(async ({ data, context }) => {
+    await ensureAdmin(context.userId);
+    const { error } = await supabaseAdmin
+      .from("profiles").update({ blocked: data.blocked }).eq("id", data.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });
 
 // Admin: delete a user
