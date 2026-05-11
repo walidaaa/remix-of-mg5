@@ -154,7 +154,7 @@ function UsersTab() {
       setLoading(false);
     }
   };
-  useEffect(() => { refresh(); }, []);
+  useEffect(() => { refresh().catch((e) => console.error(e)); }, []);
 
   useEffect(() => {
     if (!brand) { setModels([]); setModel(""); return; }
