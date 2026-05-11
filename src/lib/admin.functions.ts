@@ -89,7 +89,7 @@ export const setupFirstAdmin = createServerFn({ method: "POST" })
 
 // Admin: create a regular user
 export const adminCreateUser = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([attachSupabaseAuth, requireSupabaseAuth])
   .inputValidator((d: { username: string; password: string; brand?: string }) => ({
     username: usernameSchema.parse(d.username),
     password: passwordSchema.parse(d.password),
@@ -132,7 +132,7 @@ export const adminCreateUser = createServerFn({ method: "POST" })
 
 // Admin: list all users (with role + username)
 export const adminListUsers = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([attachSupabaseAuth, requireSupabaseAuth])
   .handler(async ({ context }) => {
     await ensureAdmin(context.userId);
 
@@ -166,7 +166,7 @@ export const adminListUsers = createServerFn({ method: "GET" })
 
 // Admin: delete a user
 export const adminDeleteUser = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([attachSupabaseAuth, requireSupabaseAuth])
   .inputValidator((d: { userId: string }) => ({ userId: z.string().uuid().parse(d.userId) }))
   .handler(async ({ data, context }) => {
     await ensureAdmin(context.userId);
@@ -178,7 +178,7 @@ export const adminDeleteUser = createServerFn({ method: "POST" })
 
 // Admin: reset a user's password
 export const adminResetPassword = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([attachSupabaseAuth, requireSupabaseAuth])
   .inputValidator((d: { userId: string; password: string }) => ({
     userId: z.string().uuid().parse(d.userId),
     password: passwordSchema.parse(d.password),
@@ -194,7 +194,7 @@ export const adminResetPassword = createServerFn({ method: "POST" })
 
 // Brands
 export const listBrands = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([attachSupabaseAuth, requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase
       .from("car_brands")
@@ -205,7 +205,7 @@ export const listBrands = createServerFn({ method: "GET" })
   });
 
 export const adminAddBrand = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([attachSupabaseAuth, requireSupabaseAuth])
   .inputValidator((d: { name: string }) => ({
     name: z.string().trim().min(1).max(50).parse(d.name),
   }))
@@ -217,7 +217,7 @@ export const adminAddBrand = createServerFn({ method: "POST" })
   });
 
 export const adminDeleteBrand = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([attachSupabaseAuth, requireSupabaseAuth])
   .inputValidator((d: { id: string }) => ({ id: z.string().uuid().parse(d.id) }))
   .handler(async ({ data, context }) => {
     await ensureAdmin(context.userId);
