@@ -138,7 +138,7 @@ function VehiclePage() {
 
       {showForm && (
       <form onSubmit={submit} className="rounded-2xl gradient-card p-6 md:p-8 shadow-card grid gap-5 md:grid-cols-2">
-        <Field label="Matricule" required>
+        <Field label={t("veh.matricule")} required>
           <input
             value={form.matricule}
             onChange={(e) => set("matricule", e.target.value.toUpperCase())}
@@ -148,7 +148,7 @@ function VehiclePage() {
           />
         </Field>
 
-        <Field label="Marque" required>
+        <Field label={t("veh.brand")} required>
           <input
             value={form.marque || "—"}
             readOnly
@@ -157,7 +157,7 @@ function VehiclePage() {
           />
         </Field>
 
-        <Field label="Modèle" required>
+        <Field label={t("veh.model")} required>
           <select
             value={form.modele}
             onChange={(e) => set("modele", e.target.value)}
@@ -165,14 +165,14 @@ function VehiclePage() {
             className="input"
             disabled={models.length === 0}
           >
-            <option value="">{models.length ? "— Choisir —" : "Aucun modèle disponible"}</option>
+            <option value="">{models.length ? t("veh.choose") : t("veh.noModel")}</option>
             {models.map((m) => (
               <option key={m.id} value={m.name}>{m.name}</option>
             ))}
           </select>
         </Field>
 
-        <Field label="Année">
+        <Field label={t("veh.year")}>
           <input
             type="number"
             value={form.annee}
@@ -181,35 +181,35 @@ function VehiclePage() {
           />
         </Field>
 
-        <Field label="Couleur">
+        <Field label={t("veh.color")}>
           <input
             value={form.couleur}
             onChange={(e) => set("couleur", e.target.value)}
-            placeholder="Rouge, Blanc..."
+            placeholder={t("veh.color.placeholder")}
             className="input"
           />
         </Field>
 
-        <Field label="Boîte de vitesse">
+        <Field label={t("veh.transmission")}>
           <div className="grid grid-cols-2 gap-2">
-            {(["manuelle", "automatique"] as const).map((t) => (
+            {(["manuelle", "automatique"] as const).map((tp) => (
               <button
                 type="button"
-                key={t}
-                onClick={() => set("transmission", t)}
+                key={tp}
+                onClick={() => set("transmission", tp)}
                 className={`py-3 rounded-lg font-medium capitalize transition ${
-                  form.transmission === t
+                  form.transmission === tp
                     ? "bg-primary text-primary-foreground shadow-glow"
                     : "bg-secondary text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {t}
+                {t(`veh.transmission.${tp === "automatique" ? "auto" : "manual"}` as any)}
               </button>
             ))}
           </div>
         </Field>
 
-        <Field label="Kilométrage actuel">
+        <Field label={t("veh.km")}>
           <input
             type="number"
             value={form.kmActuel}
@@ -218,7 +218,7 @@ function VehiclePage() {
           />
         </Field>
 
-        <Field label="Intervalle vidange (km) — référence">
+        <Field label={t("veh.interval")}>
           <input
             type="number"
             value={form.intervalleVidange}
@@ -228,7 +228,7 @@ function VehiclePage() {
         </Field>
 
         {isFirstSetup && (
-          <Field label="Dernière vidange (km)">
+          <Field label={t("veh.lastOil")}>
             <input
               type="number"
               value={dernierVidangeKm}
@@ -237,23 +237,23 @@ function VehiclePage() {
               className="input"
             />
             <p className="text-xs text-muted-foreground mt-1">
-              Saisissez le kilométrage de la dernière vidange effectuée. Une entrée sera créée automatiquement.
+              {t("veh.lastOilHelp")}
             </p>
           </Field>
         )}
 
         {(form.intervalleVidange > 0 && (data.oilChanges[0]?.km || Number(dernierVidangeKm) > 0)) && (
           <div className="md:col-span-2 rounded-xl border border-primary/30 bg-primary/10 p-4 grid gap-1">
-            <div className="text-xs uppercase tracking-wider text-primary font-semibold">Calcul prochaine vidange</div>
+            <div className="text-xs uppercase tracking-wider text-primary font-semibold">{t("veh.nextCalc")}</div>
             <div className="text-sm text-muted-foreground">
-              Dernière vidange : <span className="font-mono text-foreground">{(data.oilChanges[0]?.km ?? Number(dernierVidangeKm || 0)).toLocaleString("fr-FR")} km</span>
-              {" + "}Intervalle : <span className="font-mono text-foreground">{form.intervalleVidange.toLocaleString("fr-FR")} km</span>
+              {t("veh.nextCalc.last")} <span className="font-mono text-foreground">{(data.oilChanges[0]?.km ?? Number(dernierVidangeKm || 0)).toLocaleString("fr-FR")} {t("common.km")}</span>
+              {" + "}{t("veh.nextCalc.interval")} <span className="font-mono text-foreground">{form.intervalleVidange.toLocaleString("fr-FR")} {t("common.km")}</span>
             </div>
             <div className="text-lg font-display text-primary">
-              Prochaine vidange obligatoire à {prochainKm.toLocaleString("fr-FR")} km
+              {t("veh.nextCalc.next")} {prochainKm.toLocaleString("fr-FR")} {t("common.km")}
               {form.kmActuel > 0 && (
                 <span className="text-sm text-muted-foreground ml-2">
-                  ({(prochainKm - form.kmActuel).toLocaleString("fr-FR")} km restants)
+                  ({(prochainKm - form.kmActuel).toLocaleString("fr-FR")} {t("veh.nextCalc.remaining")})
                 </span>
               )}
             </div>
@@ -263,11 +263,11 @@ function VehiclePage() {
         <div className="md:col-span-2 flex justify-end gap-2">
           {v && (
             <button type="button" onClick={() => { setEditing(false); setForm(v); }} className="inline-flex items-center gap-2 bg-secondary text-foreground px-5 py-3 rounded-lg font-semibold hover:opacity-90">
-              Annuler
+              {t("common.cancel")}
             </button>
           )}
           <button className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold shadow-glow hover:opacity-90">
-            <Save size={18} /> Enregistrer
+            <Save size={18} /> {t("common.save")}
           </button>
         </div>
       </form>
