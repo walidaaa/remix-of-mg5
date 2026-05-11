@@ -4,10 +4,12 @@ import { useAppData } from "@/lib/use-app-data";
 import {
   updateInsurance,
   updateVignette,
+  updateVehicleDoc,
   uploadDocument,
   getDocumentUrl,
   type Insurance,
   type Vignette,
+  type VehicleDoc,
 } from "@/lib/storage";
 import { useEffect, useRef, useState } from "react";
 import {
