@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { useIsAdmin } from "@/lib/use-is-admin";
 import { AdminOverview } from "@/components/admin-overview";
+import { useLang } from "@/lib/i18n";
 import {
   Table,
   TableBody,
@@ -39,7 +40,7 @@ import {
 export const Route = createFileRoute("/assurance")({
   head: () => ({
     meta: [
-      { title: "Assurance & Vignette — MG5 Maintenance" },
+      { title: "Assurance & Vignette — Cars Maintenance" },
       { name: "description", content: "Suivi assurance, vignette, dates et coûts." },
     ],
   }),
