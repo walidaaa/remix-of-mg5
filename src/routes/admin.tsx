@@ -144,6 +144,32 @@ function UsersTab() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
+  // Change password panel
+  const [showPwdPanel, setShowPwdPanel] = useState(false);
+  const [pwdUserId, setPwdUserId] = useState("");
+  const [newPwd, setNewPwd] = useState("");
+  const [showNewPwd, setShowNewPwd] = useState(false);
+  const [pwdBusy, setPwdBusy] = useState(false);
+  const [pwdMsg, setPwdMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+
+  const submitChangePwd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwdMsg(null);
+    if (!pwdUserId) { setPwdMsg({ type: "err", text: "Sélectionnez un utilisateur" }); return; }
+    if (newPwd.length < 6) { setPwdMsg({ type: "err", text: "Mot de passe min 6 caractères" }); return; }
+    setPwdBusy(true);
+    try {
+      await reset({ data: { userId: pwdUserId, password: newPwd } });
+      const u = users.find((x) => x.id === pwdUserId);
+      setPwdMsg({ type: "ok", text: `Mot de passe mis à jour pour "${u?.username ?? "utilisateur"}".` });
+      setNewPwd("");
+    } catch (e: any) {
+      setPwdMsg({ type: "err", text: e?.message ?? "Erreur" });
+    } finally {
+      setPwdBusy(false);
+    }
+  };
+
   const refresh = async () => {
     setLoading(true);
     try {
