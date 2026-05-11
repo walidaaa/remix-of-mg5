@@ -306,6 +306,7 @@ function Field({ label, children, required }: { label: string; children: React.R
 
 function FullDataModal({ data, onClose }: { data: ReturnType<typeof useAppData>; onClose: () => void }) {
   const v = data.vehicle!;
+  const { t } = useLang();
   const totalOil = useMemo(() => data.oilChanges.reduce((s, o) => s + (Number(o.cout) || 0), 0), [data.oilChanges]);
   const totalMaint = useMemo(() => data.maintenance.reduce((s, m) => s + (Number(m.cout) || 0), 0), [data.maintenance]);
   const total = totalOil + totalMaint;
@@ -319,92 +320,86 @@ function FullDataModal({ data, onClose }: { data: ReturnType<typeof useAppData>;
           <div className="flex items-center gap-3">
             <div className="rounded-lg bg-primary/15 text-primary p-2"><FileText size={20} /></div>
             <div>
-              <h2 className="text-xl font-display">Toutes les données du véhicule</h2>
-              <p className="text-xs text-muted-foreground">Synthèse complète</p>
+              <h2 className="text-xl font-display">{t("veh.modal.title")}</h2>
+              <p className="text-xs text-muted-foreground">{t("veh.modal.sub")}</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-secondary" aria-label="Fermer"><X size={18} /></button>
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-secondary" aria-label={t("common.close")}><X size={18} /></button>
         </div>
 
         <div className="p-5 grid gap-5">
-          {/* Vehicle */}
-          <Section icon={Car} title="Véhicule" tone="primary">
+          <Section icon={Car} title={t("veh.section.vehicle")} tone="primary">
             <Grid>
-              <Info label="Matricule" value={v.matricule || "—"} mono />
-              <Info label="Marque" value={v.marque} />
-              <Info label="Modèle" value={v.modele} />
-              <Info label="Année" value={String(v.annee)} />
-              <Info label="Couleur" value={v.couleur || "—"} />
-              <Info label="Transmission" value={v.transmission} />
-              <Info label="Km actuel" value={v.kmActuel.toLocaleString("fr-FR") + " km"} />
-              <Info label="Intervalle vidange" value={v.intervalleVidange.toLocaleString("fr-FR") + " km"} />
+              <Info label={t("veh.matricule")} value={v.matricule || "—"} mono />
+              <Info label={t("veh.brand")} value={v.marque} />
+              <Info label={t("veh.model")} value={v.modele} />
+              <Info label={t("veh.year")} value={String(v.annee)} />
+              <Info label={t("veh.color")} value={v.couleur || "—"} />
+              <Info label={t("veh.transmission.short")} value={t(`veh.transmission.${v.transmission === "automatique" ? "auto" : "manual"}` as any)} />
+              <Info label={t("dash.km")} value={v.kmActuel.toLocaleString("fr-FR") + " " + t("common.km")} />
+              <Info label={t("veh.interval.short")} value={v.intervalleVidange.toLocaleString("fr-FR") + " " + t("common.km")} />
             </Grid>
           </Section>
 
-          {/* Costs */}
-          <Section icon={Coins} title="Coûts cumulés" tone="success">
+          <Section icon={Coins} title={t("veh.section.costs")} tone="success">
             <Grid>
-              <Info label="Vidanges" value={`${totalOil.toLocaleString("fr-FR")} DH`} />
-              <Info label="Entretiens" value={`${totalMaint.toLocaleString("fr-FR")} DH`} />
-              <Info label="Total global" value={`${total.toLocaleString("fr-FR")} DH`} highlight />
+              <Info label={t("veh.costs.oil")} value={`${totalOil.toLocaleString("fr-FR")} DH`} />
+              <Info label={t("veh.costs.maint")} value={`${totalMaint.toLocaleString("fr-FR")} DH`} />
+              <Info label={t("veh.costs.total")} value={`${total.toLocaleString("fr-FR")} DH`} highlight />
             </Grid>
           </Section>
 
-          {/* Insurance */}
-          <Section icon={ShieldCheck} title="Assurance" tone={insDays === null ? "muted" : insDays < 0 ? "destructive" : insDays <= 30 ? "warning" : "success"}>
+          <Section icon={ShieldCheck} title={t("veh.section.insurance")} tone={insDays === null ? "muted" : insDays < 0 ? "destructive" : insDays <= 30 ? "warning" : "success"}>
             {ins ? (
               <Grid>
-                <Info label="Compagnie" value={ins.compagnie || "—"} />
-                <Info label="N° police" value={ins.numeroPolice || "—"} mono />
-                <Info label="Du" value={ins.dateDebut ? new Date(ins.dateDebut).toLocaleDateString("fr-FR") : "—"} />
-                <Info label="Au" value={ins.dateFin ? new Date(ins.dateFin).toLocaleDateString("fr-FR") : "—"} />
+                <Info label={t("veh.ins.company")} value={ins.compagnie || "—"} />
+                <Info label={t("veh.ins.policy")} value={ins.numeroPolice || "—"} mono />
+                <Info label={t("veh.ins.from")} value={ins.dateDebut ? new Date(ins.dateDebut).toLocaleDateString("fr-FR") : "—"} />
+                <Info label={t("veh.ins.to")} value={ins.dateFin ? new Date(ins.dateFin).toLocaleDateString("fr-FR") : "—"} />
                 {insDays !== null && (
-                  <Info label="Statut" value={insDays < 0 ? `Expirée ${Math.abs(insDays)}j` : `${insDays} j restants`} highlight />
+                  <Info label={t("veh.ins.status")} value={insDays < 0 ? `${t("ins.status.expired")} ${Math.abs(insDays)} ${t("common.days")}` : `${insDays} ${t("common.days")}`} highlight />
                 )}
               </Grid>
             ) : (
-              <p className="text-sm text-muted-foreground">Aucune assurance enregistrée.</p>
+              <p className="text-sm text-muted-foreground">{t("veh.ins.none")}</p>
             )}
           </Section>
 
-          {/* Oil changes */}
-          <Section icon={Droplet} title={`Vidanges (${data.oilChanges.length})`} tone="primary">
+          <Section icon={Droplet} title={`${t("veh.section.oil")} (${data.oilChanges.length})`} tone="primary">
             {data.oilChanges.length ? (
               <div className="grid gap-2">
                 {data.oilChanges.map((o) => (
                   <div key={o.id} className="rounded-lg bg-secondary/40 p-3 text-sm flex items-center justify-between gap-3 flex-wrap">
                     <div className="flex items-center gap-3 flex-wrap">
                       <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Calendar size={11} />{new Date(o.date).toLocaleDateString("fr-FR")}</span>
-                      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Gauge size={11} />{o.km.toLocaleString("fr-FR")} km</span>
+                      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Gauge size={11} />{o.km.toLocaleString("fr-FR")} {t("common.km")}</span>
                       <span className="px-2 py-0.5 rounded bg-primary/15 text-primary text-xs">{o.typeHuile}</span>
-                      {o.filtreHuile && <span className="text-xs text-muted-foreground">Filtre: {o.filtreHuile}</span>}
+                      {o.filtreHuile && <span className="text-xs text-muted-foreground">{t("dash.field.filter")}: {o.filtreHuile}</span>}
                     </div>
                     <span className="font-mono text-sm">{o.cout != null ? `${o.cout} DH` : "—"}</span>
                   </div>
                 ))}
               </div>
-            ) : <p className="text-sm text-muted-foreground">Aucune vidange.</p>}
+            ) : <p className="text-sm text-muted-foreground">{t("veh.ins.noneShort")}</p>}
           </Section>
 
-          {/* Maintenance */}
-          <Section icon={Wrench} title={`Entretiens (${data.maintenance.length})`} tone="warning">
+          <Section icon={Wrench} title={`${t("veh.section.maintenance")} (${data.maintenance.length})`} tone="warning">
             {data.maintenance.length ? (
               <div className="grid gap-2">
                 {data.maintenance.map((m) => {
-                  const def = MAINTENANCE_LABELS[m.type as MaintenanceType];
                   return (
                     <div key={m.id} className="rounded-lg bg-secondary/40 p-3 text-sm flex items-center justify-between gap-3 flex-wrap">
                       <div className="flex items-center gap-3 flex-wrap">
-                        <span className="font-semibold">{def?.label ?? m.type}</span>
+                        <span className="font-semibold">{t(`mt.${m.type}` as any)}</span>
                         <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Calendar size={11} />{new Date(m.date).toLocaleDateString("fr-FR")}</span>
-                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Gauge size={11} />{m.km.toLocaleString("fr-FR")} km</span>
+                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Gauge size={11} />{m.km.toLocaleString("fr-FR")} {t("common.km")}</span>
                       </div>
                       <span className="font-mono text-sm">{m.cout != null ? `${m.cout} DH` : "—"}</span>
                     </div>
                   );
                 })}
               </div>
-            ) : <p className="text-sm text-muted-foreground">Aucun entretien.</p>}
+            ) : <p className="text-sm text-muted-foreground">{t("veh.maint.none")}</p>}
           </Section>
         </div>
       </div>
