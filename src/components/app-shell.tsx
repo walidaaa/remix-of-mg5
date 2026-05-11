@@ -16,6 +16,7 @@ const baseLinks = [
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { pathname } = useLocation();
   const { user, signOut } = useAuth();
+  const { t } = useLang();
   const [isAdmin, setIsAdmin] = useState(false);
   const [username, setUsername] = useState<string | null>(null);
 
@@ -37,7 +38,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   const links = isAdmin
-    ? ([...baseLinks, { to: "/admin" as const, label: "Admin", icon: ShieldUser }] as const)
+    ? ([...baseLinks, { to: "/admin" as const, labelKey: "nav.admin" as const, icon: ShieldUser }] as const)
     : baseLinks;
 
   return (
@@ -49,23 +50,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Maintenance</span>
         </div>
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-xs text-muted-foreground truncate max-w-[120px]">
-            {username ?? user?.email}
-          </span>
+          <LangToggle />
           <button
             onClick={() => signOut()}
-            aria-label="Déconnexion"
+            aria-label={t("auth.logout")}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-secondary text-foreground hover:bg-secondary/80 text-xs font-medium"
           >
-            <LogOut size={14} /> <span>Sortir</span>
+            <LogOut size={14} /> <span>{t("auth.signOut")}</span>
           </button>
         </div>
       </header>
 
       <aside className="hidden md:flex fixed left-0 top-0 h-screen w-64 flex-col border-r border-border bg-card/50 backdrop-blur p-6 gap-2">
-        <div className="mb-8">
-          <div className="font-display text-3xl text-primary">MG5</div>
-          <div className="text-xs text-muted-foreground uppercase tracking-widest">Maintenance</div>
+        <div className="mb-6 flex items-start justify-between gap-2">
+          <div>
+            <div className="font-display text-3xl text-primary">MG5</div>
+            <div className="text-xs text-muted-foreground uppercase tracking-widest">Maintenance</div>
+          </div>
+          <LangToggle />
         </div>
         {links.map((l) => {
           const active = pathname === l.to;
@@ -81,7 +83,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               }`}
             >
               <Icon size={18} />
-              <span className="font-medium">{l.label}</span>
+              <span className="font-medium">{t(l.labelKey)}</span>
             </Link>
           );
         })}
@@ -93,7 +95,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             onClick={() => signOut()}
             className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground"
           >
-            <LogOut size={16} /> <span className="text-sm">Déconnexion</span>
+            <LogOut size={16} /> <span className="text-sm">{t("auth.logout")}</span>
           </button>
         </div>
       </aside>
@@ -114,7 +116,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 }`}
               >
                 <Icon size={20} />
-                <span>{l.label}</span>
+                <span>{t(l.labelKey)}</span>
               </Link>
             );
           })}
