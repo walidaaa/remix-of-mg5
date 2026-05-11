@@ -9,6 +9,13 @@ import byd from "@/assets/brands/byd.jpg";
 import gac from "@/assets/brands/gac.jpg";
 import omoda from "@/assets/brands/omoda.jpg";
 import jaecoo from "@/assets/brands/jaecoo.jpg";
+import hyundai from "@/assets/brands/hyundai.jpg";
+import kia from "@/assets/brands/kia.jpg";
+import toyota from "@/assets/brands/toyota.jpg";
+import renault from "@/assets/brands/renault.jpg";
+import peugeot from "@/assets/brands/peugeot.jpg";
+import dacia from "@/assets/brands/dacia.jpg";
+import ford from "@/assets/brands/ford.jpg";
 
 const MAP: Record<string, string> = {
   mg,
@@ -22,6 +29,13 @@ const MAP: Record<string, string> = {
   omoda,
   jaecoo,
   volkswagen,
+  hyundai,
+  kia,
+  toyota,
+  renault,
+  peugeot,
+  dacia,
+  ford,
 };
 
 export function getBrandImage(marque?: string | null): string {
