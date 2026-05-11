@@ -65,14 +65,16 @@ function InsurancePage() {
 
   const insJ = daysUntil(data.insurance?.dateFin);
   const vigJ = daysUntil(data.vignette?.dateFin);
+  const vehJ = daysUntil(data.vehicleDoc?.dateFin);
   const insStatus = statusOf(insJ);
   const vigStatus = statusOf(vigJ);
+  const vehStatus = statusOf(vehJ);
 
   return (
     <AppShell>
       <div className="mb-8">
-        <h1 className="text-3xl mb-2">Assurance & Vignette</h1>
-        <p className="text-muted-foreground">Polices, échéances, scans et coûts (DA).</p>
+        <h1 className="text-3xl mb-2">Documents véhicule</h1>
+        <p className="text-muted-foreground">Assurance, vignette, carte grise — dates, scans et coûts (DA).</p>
       </div>
 
       {/* Récap table */}
@@ -112,11 +114,22 @@ function InsurancePage() {
               cout={data.vignette?.cout}
               status={vigStatus}
             />
+            <RecapRow
+              label="Carte grise"
+              icon={Car}
+              ref1={data.vehicleDoc?.organisme}
+              ref2={data.vehicleDoc?.numero}
+              dateDebut={data.vehicleDoc?.dateDebut}
+              dateFin={data.vehicleDoc?.dateFin}
+              j={vehJ}
+              cout={data.vehicleDoc?.cout}
+              status={vehStatus}
+            />
           </TableBody>
         </Table>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid lg:grid-cols-2 xl:grid-cols-3 gap-6">
         <DocumentCard
           kind="assurance"
           title="Police d'assurance"
@@ -132,6 +145,14 @@ function InsurancePage() {
           value={data.vignette}
           status={vigStatus}
           j={vigJ}
+        />
+        <DocumentCard
+          kind="vehicle"
+          title="Carte grise / Permis"
+          icon={Car}
+          value={data.vehicleDoc}
+          status={vehStatus}
+          j={vehJ}
         />
       </div>
     </AppShell>
