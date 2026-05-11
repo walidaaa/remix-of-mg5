@@ -25,6 +25,7 @@ export const Route = createFileRoute("/entretien")({
 
 function MaintenancePage() {
   const data = useAppData();
+  const { isAdmin, checked } = useIsAdmin();
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<MaintenanceType>("filtre-air");
   const [form, setForm] = useState({
