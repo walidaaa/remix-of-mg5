@@ -22,6 +22,7 @@ export const Route = createFileRoute("/vehicule")({
 function VehiclePage() {
   const data = useAppData();
   const nav = useNavigate();
+  const { isAdmin, checked } = useIsAdmin();
   const v = data.vehicle;
   const fetchBrands = useServerFn(listBrands);
   const fetchModels = useServerFn(listModels);
