@@ -120,14 +120,18 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   const router = useTanRouter();
   const pathname = router.state.location.pathname;
   const [routing, setRouting] = useState(false);
+  const [decidedFor, setDecidedFor] = useState<string | null>(null);
 
   useEffect(() => {
     if (loading) return;
     if (!user) {
+      setDecidedFor(null);
       if (!PUBLIC_PATHS.has(pathname)) router.navigate({ to: "/login" });
       return;
     }
-    // Logged in: decide where to land
+    // Only run landing decision once per user session, OR when on a public path.
+    if (decidedFor === user.id && !PUBLIC_PATHS.has(pathname)) return;
+
     let cancelled = false;
     setRouting(true);
     (async () => {
@@ -144,10 +148,11 @@ function AuthGate({ children }: { children: React.ReactNode }) {
       } else if (!isAdmin && !hasVehicle && pathname !== "/vehicule") {
         router.navigate({ to: "/vehicule" });
       }
+      setDecidedFor(user.id);
       setRouting(false);
     })();
     return () => { cancelled = true; };
-  }, [user, loading, pathname, router]);
+  }, [user, loading, pathname, router, decidedFor]);
 
   if (loading || routing) {
     return (
