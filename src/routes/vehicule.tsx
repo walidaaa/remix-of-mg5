@@ -92,9 +92,9 @@ function VehiclePage() {
     <AppShell>
       <div className="flex items-start justify-between gap-4 mb-8 flex-wrap">
         <div>
-          <h1 className="text-3xl mb-2">Mon véhicule</h1>
+          <h1 className="text-3xl mb-2">{t("veh.title")}</h1>
           <p className="text-muted-foreground">
-            {!v ? "Renseignez les informations de votre voiture." : editing ? "Modifiez les informations." : "Informations enregistrées."}
+            {!v ? t("veh.intro.empty") : editing ? t("veh.intro.editing") : t("veh.intro.saved")}
           </p>
         </div>
         {v && (
@@ -105,7 +105,7 @@ function VehiclePage() {
                 onClick={() => { setForm(v); setEditing(true); }}
                 className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-lg font-semibold shadow-glow hover:opacity-90 transition"
               >
-                <Pencil size={18} /> Modifier
+                <Pencil size={18} /> {t("common.edit")}
               </button>
             )}
             <button
@@ -113,7 +113,7 @@ function VehiclePage() {
               onClick={() => setShowAll(true)}
               className="inline-flex items-center gap-2 bg-primary/15 text-primary border border-primary/30 px-4 py-2.5 rounded-lg font-semibold hover:bg-primary/25 transition"
             >
-              <FileText size={18} /> Voir toutes les données
+              <FileText size={18} /> {t("veh.viewAll")}
             </button>
           </div>
         )}
@@ -124,14 +124,14 @@ function VehiclePage() {
       {!showForm && v && (
         <div className="rounded-2xl gradient-card p-6 md:p-8 shadow-card">
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-            <Info label="Matricule" value={v.matricule || "—"} mono />
-            <Info label="Marque" value={v.marque || "—"} />
-            <Info label="Modèle" value={v.modele || "—"} />
-            <Info label="Année" value={String(v.annee)} />
-            <Info label="Couleur" value={v.couleur || "—"} />
-            <Info label="Boîte" value={v.transmission} />
-            <Info label="Kilométrage" value={v.kmActuel.toLocaleString("fr-FR") + " km"} highlight />
-            <Info label="Intervalle vidange" value={v.intervalleVidange.toLocaleString("fr-FR") + " km"} />
+            <Info label={t("veh.matricule")} value={v.matricule || "—"} mono />
+            <Info label={t("veh.brand")} value={v.marque || "—"} />
+            <Info label={t("veh.model")} value={v.modele || "—"} />
+            <Info label={t("veh.year")} value={String(v.annee)} />
+            <Info label={t("veh.color")} value={v.couleur || "—"} />
+            <Info label={t("veh.transmission.short")} value={t(`veh.transmission.${v.transmission === "automatique" ? "auto" : "manual"}` as any)} />
+            <Info label={t("dash.km")} value={v.kmActuel.toLocaleString("fr-FR") + " " + t("common.km")} highlight />
+            <Info label={t("veh.interval.short")} value={v.intervalleVidange.toLocaleString("fr-FR") + " " + t("common.km")} />
           </div>
         </div>
       )}
