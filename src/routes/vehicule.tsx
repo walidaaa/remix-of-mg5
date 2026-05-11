@@ -21,12 +21,14 @@ function VehiclePage() {
   const data = useAppData();
   const nav = useNavigate();
   const v = data.vehicle;
+  const fetchBrands = useServerFn(listBrands);
+  const [brands, setBrands] = useState<{ id: string; name: string }[]>([]);
   const [form, setForm] = useState<Vehicle>(
     v ?? {
       matricule: "",
-      marque: "MG",
-      modele: "MG5",
-      couleur: "Blanc",
+      marque: "",
+      modele: "",
+      couleur: "",
       transmission: "automatique",
       annee: new Date().getFullYear(),
       kmActuel: 0,
@@ -34,12 +36,21 @@ function VehiclePage() {
     }
   );
 
+  useEffect(() => {
+    fetchBrands().then((b) => {
+      setBrands(b);
+      if (!form.marque && b[0]) setForm((f) => ({ ...f, marque: b[0].name }));
+    }).catch(() => {});
+  }, [fetchBrands]);
+
+  useEffect(() => { if (v) setForm(v); }, [v]);
+
   const set = <K extends keyof Vehicle>(k: K, val: Vehicle[K]) =>
     setForm((f) => ({ ...f, [k]: val }));
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateVehicle(form);
+    await updateVehicle(form);
     nav({ to: "/" });
   };
 
@@ -61,12 +72,22 @@ function VehiclePage() {
           />
         </Field>
 
-        <Field label="Marque">
-          <input value={form.marque} onChange={(e) => set("marque", e.target.value)} className="input" />
+        <Field label="Marque" required>
+          <select
+            value={form.marque}
+            onChange={(e) => set("marque", e.target.value)}
+            required
+            className="input"
+          >
+            <option value="">— Choisir —</option>
+            {brands.map((b) => (
+              <option key={b.id} value={b.name}>{b.name}</option>
+            ))}
+          </select>
         </Field>
 
         <Field label="Modèle">
-          <input value={form.modele} onChange={(e) => set("modele", e.target.value)} className="input" />
+          <input value={form.modele} onChange={(e) => set("modele", e.target.value)} placeholder="MG5, Golf, Yaris..." className="input" />
         </Field>
 
         <Field label="Année">
