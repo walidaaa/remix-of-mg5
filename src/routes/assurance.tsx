@@ -432,14 +432,14 @@ function DocumentCard({
                   onClick={() => { setEditing(false); setForm(value as any); }}
                   className="px-3 py-1.5 rounded-md bg-secondary text-xs font-semibold"
                 >
-                  Annuler
+                  {t("common.cancel")}
                 </button>
               )}
               <button
                 disabled={saving}
                 className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground px-3 py-1.5 rounded-md text-xs font-semibold disabled:opacity-50"
               >
-                <Save size={14} /> {saving ? "…" : "Enregistrer"}
+                <Save size={14} /> {saving ? "…" : t("common.save")}
               </button>
             </div>
           </form>
