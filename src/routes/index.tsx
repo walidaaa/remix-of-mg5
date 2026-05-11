@@ -83,10 +83,15 @@ function Dashboard() {
   return (
     <AppShell>
       {/* Hero with car photo */}
-      <div className="relative rounded-2xl overflow-hidden shadow-card mb-6">
-        <div className="relative h-56 md:h-72">
-          <img src={getBrandImage(v.marque)} alt={`${v.marque} ${v.modele}`} className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-transparent" />
+      <div className="relative rounded-2xl overflow-hidden shadow-card mb-6 bg-card">
+        <div className="relative h-72 md:h-96">
+          <img
+            src={getBrandImage(v.marque)}
+            alt={`${v.marque} ${v.modele}`}
+            className="absolute inset-0 w-full h-full object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-background/10" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
           <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-8">
             <div className="text-xs uppercase tracking-widest text-primary font-semibold">
               {v.marque} · {v.annee}
