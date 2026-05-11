@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { LangToggle, useLang } from "@/lib/i18n";
 import { useAppData } from "@/lib/use-app-data";
+import { ThemeToggle } from "@/lib/theme";
 
 const baseLinks = [
   { to: "/", labelKey: "nav.dashboard", icon: Gauge },
@@ -59,6 +60,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Maintenance</span>
         </div>
         <div className="flex items-center gap-2 min-w-0">
+          <ThemeToggle />
           <LangToggle />
           <button
             onClick={() => signOut()}
@@ -76,7 +78,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div className="font-display text-3xl text-primary">{brandLabel}</div>
             <div className="text-xs text-muted-foreground uppercase tracking-widest">Maintenance</div>
           </div>
-          <LangToggle />
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <LangToggle />
+          </div>
         </div>
         {links.map((l) => {
           const active = pathname === l.to;

@@ -67,6 +67,32 @@
   --ring: oklch(0.60 0.14 245);
 }
 
+.light {
+  --background: oklch(0.94 0.01 250);
+  --foreground: oklch(0.25 0.04 265);
+  --card: oklch(0.96 0.01 250);
+  --card-foreground: oklch(0.25 0.04 265);
+  --popover: oklch(0.96 0.01 250);
+  --popover-foreground: oklch(0.25 0.04 265);
+  --primary: oklch(0.60 0.18 280);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.90 0.01 250);
+  --secondary-foreground: oklch(0.25 0.04 265);
+  --muted: oklch(0.91 0.01 250);
+  --muted-foreground: oklch(0.50 0.03 260);
+  --accent: oklch(0.65 0.16 285);
+  --accent-foreground: oklch(0.99 0 0);
+  --destructive: oklch(0.62 0.24 27);
+  --destructive-foreground: oklch(0.99 0 0);
+  --success: oklch(0.62 0.16 145);
+  --success-foreground: oklch(0.99 0 0);
+  --warning: oklch(0.72 0.16 75);
+  --warning-foreground: oklch(0.20 0.02 240);
+  --border: oklch(0.86 0.01 250);
+  --input: oklch(0.92 0.01 250);
+  --ring: oklch(0.60 0.18 280);
+}
+
 @layer base {
   * { border-color: var(--color-border); }
   html { font-family: var(--font-sans); }
@@ -78,6 +104,12 @@
       radial-gradient(circle at 90% 100%, oklch(0.72 0.18 65 / 0.06) 0%, transparent 40%);
     min-height: 100vh;
   }
+  .light body {
+    background-color: #E0E5EC;
+    background-image:
+      radial-gradient(circle at 10% 0%, rgba(108, 99, 255, 0.08) 0%, transparent 40%),
+      radial-gradient(circle at 90% 100%, rgba(30, 42, 71, 0.06) 0%, transparent 40%);
+  }
   h1, h2, h3 { font-family: var(--font-display); letter-spacing: 0.01em; }
 }
 
@@ -86,4 +118,19 @@
   .gradient-card { background-image: var(--gradient-card); }
   .shadow-glow { box-shadow: var(--shadow-glow); }
   .shadow-card { box-shadow: var(--shadow-card); }
+  .neu-btn {
+    background: var(--color-card);
+    box-shadow: 6px 6px 12px rgba(0,0,0,0.35), -6px -6px 12px rgba(255,255,255,0.04);
+  }
+  .neu-btn:hover { transform: translateY(-1px); }
+  .neu-btn:active {
+    box-shadow: inset 4px 4px 8px rgba(0,0,0,0.4), inset -4px -4px 8px rgba(255,255,255,0.04);
+  }
+  .light .neu-btn {
+    background: #E0E5EC;
+    box-shadow: 6px 6px 12px #A3B1C6, -6px -6px 12px #FFFFFF;
+  }
+  .light .neu-btn:active {
+    box-shadow: inset 4px 4px 8px #A3B1C6, inset -4px -4px 8px #FFFFFF;
+  }
 }
