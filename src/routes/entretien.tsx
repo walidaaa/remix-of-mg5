@@ -27,10 +27,10 @@ function MaintenancePage() {
   const data = useAppData();
   const { isAdmin, checked } = useIsAdmin();
   const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [type, setType] = useState<MaintenanceType>("filtre-air");
   const [form, setForm] = useState({
     date: new Date().toISOString().slice(0, 10),
-    km: data.vehicle?.kmActuel ?? 0,
     intervalleKm: MAINTENANCE_LABELS["filtre-air"].defaultKm,
     intervalleMois: MAINTENANCE_LABELS["filtre-air"].defaultMois ?? 0,
     cout: "",
@@ -43,18 +43,25 @@ function MaintenancePage() {
     setForm((f) => ({ ...f, intervalleKm: def.defaultKm, intervalleMois: def.defaultMois ?? 0 }));
   };
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    addMaintenance({
-      type,
-      date: new Date(form.date).toISOString(),
-      km: Number(form.km),
-      intervalleKm: form.intervalleKm || undefined,
-      intervalleMois: form.intervalleMois || undefined,
-      cout: form.cout ? Number(form.cout) : undefined,
-      notes: form.notes || undefined,
-    });
-    setOpen(false);
+    if (saving) return;
+    setSaving(true);
+    try {
+      await addMaintenance({
+        type,
+        date: new Date(form.date).toISOString(),
+        km: data.vehicle?.kmActuel ?? 0,
+        intervalleKm: form.intervalleKm || undefined,
+        intervalleMois: form.intervalleMois || undefined,
+        cout: form.cout ? Number(form.cout) : undefined,
+        notes: form.notes || undefined,
+      });
+      setOpen(false);
+      setForm((f) => ({ ...f, cout: "", notes: "" }));
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (checked && isAdmin) return <AdminOverview view="maintenance" />;
@@ -152,8 +159,13 @@ function MaintenancePage() {
                 <input type="date" required value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="input" />
               </label>
               <label className="block">
-                <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Kilométrage</div>
-                <input type="number" required value={form.km} onChange={(e) => setForm({ ...form, km: Number(e.target.value) })} className="input" />
+                <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Kilométrage actuel (verrouillé)</div>
+                <input
+                  type="text"
+                  readOnly
+                  value={`${(data.vehicle?.kmActuel ?? 0).toLocaleString("fr-FR")} km`}
+                  className="input opacity-80 cursor-not-allowed font-mono"
+                />
               </label>
               <label className="block">
                 <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Intervalle (km)</div>
@@ -164,8 +176,11 @@ function MaintenancePage() {
                 <input type="number" value={form.intervalleMois} onChange={(e) => setForm({ ...form, intervalleMois: Number(e.target.value) })} className="input" />
               </label>
             </div>
+            <p className="text-xs text-muted-foreground -mt-2">
+              Le kilométrage est repris automatiquement du véhicule. Mettez-le à jour depuis le Tableau ou la page Véhicule.
+            </p>
             <label className="block">
-              <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Coût (DH)</div>
+              <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Coût (DA)</div>
               <input type="number" value={form.cout} onChange={(e) => setForm({ ...form, cout: e.target.value })} className="input" />
             </label>
             <label className="block">
@@ -174,7 +189,7 @@ function MaintenancePage() {
             </label>
             <div className="flex gap-2 justify-end pt-2">
               <button type="button" onClick={() => setOpen(false)} className="px-4 py-2 rounded-lg bg-secondary">Annuler</button>
-              <button className="px-5 py-2 rounded-lg bg-primary text-primary-foreground font-semibold">Enregistrer</button>
+              <button disabled={saving} className="px-5 py-2 rounded-lg bg-primary text-primary-foreground font-semibold disabled:opacity-50">{saving ? "Enregistrement…" : "Enregistrer"}</button>
             </div>
             <style>{`.input{width:100%;background:var(--color-input);border:1px solid var(--color-border);border-radius:.5rem;padding:.6rem .9rem;color:var(--color-foreground);outline:none}.input:focus{border-color:var(--color-ring)}`}</style>
           </form>
