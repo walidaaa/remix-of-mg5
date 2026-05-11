@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import { Save } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { listBrands, listModels } from "@/lib/admin.functions";
+import { useIsAdmin } from "@/lib/use-is-admin";
+import { AdminOverview } from "@/components/admin-overview";
 
 export const Route = createFileRoute("/vehicule")({
   head: () => ({
