@@ -2,14 +2,16 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { useAppData } from "@/lib/use-app-data";
 import { updateVehicle, type Vehicle } from "@/lib/storage";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Save } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { listBrands } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/vehicule")({
   head: () => ({
     meta: [
       { title: "Véhicule — MG5 Maintenance" },
-      { name: "description", content: "Informations matricule, transmission, couleur de votre MG5." },
+      { name: "description", content: "Informations matricule, transmission, couleur de votre véhicule." },
     ],
   }),
   component: VehiclePage,
