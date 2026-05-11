@@ -82,21 +82,27 @@ function VehiclePage() {
         </Field>
 
         <Field label="Marque" required>
-          <select
-            value={form.marque}
-            onChange={(e) => set("marque", e.target.value)}
-            required
-            className="input"
-          >
-            <option value="">— Choisir —</option>
-            {brands.map((b) => (
-              <option key={b.id} value={b.name}>{b.name}</option>
-            ))}
-          </select>
+          <input
+            value={form.marque || "—"}
+            readOnly
+            disabled
+            className="input opacity-70 cursor-not-allowed"
+          />
         </Field>
 
-        <Field label="Modèle">
-          <input value={form.modele} onChange={(e) => set("modele", e.target.value)} placeholder="MG5, Golf, Yaris..." className="input" />
+        <Field label="Modèle" required>
+          <select
+            value={form.modele}
+            onChange={(e) => set("modele", e.target.value)}
+            required
+            className="input"
+            disabled={models.length === 0}
+          >
+            <option value="">{models.length ? "— Choisir —" : "Aucun modèle disponible"}</option>
+            {models.map((m) => (
+              <option key={m.id} value={m.name}>{m.name}</option>
+            ))}
+          </select>
         </Field>
 
         <Field label="Année">
