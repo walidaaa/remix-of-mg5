@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { useAppData } from "@/lib/use-app-data";
-import { getNextOilChange, getMaintenanceStatus, MAINTENANCE_LABELS, updateKm } from "@/lib/storage";
+import { getNextOilChange, getMaintenanceStatus, MAINTENANCE_LABELS, updateKm, addOilChange } from "@/lib/storage";
+import { toast } from "sonner";
+import { RotateCcw } from "lucide-react";
 import { Car, Droplet, AlertTriangle, CheckCircle2, Gauge, Settings2, Palette, Wrench, ShieldCheck, Calendar, ArrowRight } from "lucide-react";
 import { useState } from "react";
 import mg5Photo from "@/assets/mg5-exterior.jpg";
@@ -116,6 +118,16 @@ function Dashboard() {
           </>
         }
         cta={{ to: "/vidanges", label: "Gérer les vidanges" }}
+        onReset={async () => {
+          const last = data.oilChanges[0];
+          await addOilChange({
+            date: new Date().toISOString(),
+            km: v.kmActuel,
+            typeHuile: last?.typeHuile || "5W-30",
+            filtreHuile: last?.filtreHuile || "",
+          });
+          toast.success("Vidange enregistrée");
+        }}
       />
 
       {/* Alertes entretien */}
@@ -213,7 +225,7 @@ function StatCard({ icon: Icon, label, value, unit, tone }: { icon: any; label: 
   );
 }
 
-function AlertBanner({ tone, title, body, cta }: { tone: string; title: string; body: React.ReactNode; cta: { to: string; label: string } }) {
+function AlertBanner({ tone, title, body, cta, onReset }: { tone: string; title: string; body: React.ReactNode; cta: { to: string; label: string }; onReset?: () => void | Promise<void> }) {
   const cls = tone === "destructive" ? "bg-destructive/10 border-destructive"
     : tone === "warning" ? "bg-warning/10 border-warning" : "bg-success/10 border-success";
   const Icon = tone === "success" ? CheckCircle2 : AlertTriangle;
@@ -225,9 +237,19 @@ function AlertBanner({ tone, title, body, cta }: { tone: string; title: string; 
         <div className="flex-1">
           <h2 className="text-xl mb-1">{title}</h2>
           <p className="text-sm text-muted-foreground">{body}</p>
-          <Link to={cta.to} className="inline-block mt-3 text-sm text-primary hover:underline">
-            {cta.label} →
-          </Link>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <Link to={cta.to} className="text-sm text-primary hover:underline">
+              {cta.label} →
+            </Link>
+            {onReset && (
+              <button
+                onClick={() => onReset()}
+                className="inline-flex items-center gap-1.5 text-sm bg-primary text-primary-foreground px-3 py-1.5 rounded-md font-medium hover:opacity-90"
+              >
+                <RotateCcw size={14} /> Reset vidange
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
