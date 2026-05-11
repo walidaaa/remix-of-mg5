@@ -87,10 +87,11 @@ export type AppData = {
   vehicle: Vehicle | null;
   oilChanges: OilChange[];
   insurance: Insurance | null;
+  vignette: Vignette | null;
   maintenance: MaintenanceItem[];
 };
 
-export const emptyData: AppData = { vehicle: null, oilChanges: [], insurance: null, maintenance: [] };
+export const emptyData: AppData = { vehicle: null, oilChanges: [], insurance: null, vignette: null, maintenance: [] };
 
 const REFRESH_EVENT = "mg5-data-update";
 function ping() {
