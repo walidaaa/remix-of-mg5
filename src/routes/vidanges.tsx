@@ -47,7 +47,7 @@ function OilChangesPage() {
     try {
       await addOilChange({
         date: new Date(form.date).toISOString(),
-        km: Number(form.km),
+        km: data.vehicle?.kmActuel ?? Number(form.km),
         typeHuile: form.typeHuile,
         filtreHuile: form.filtreHuile,
         cout: form.cout ? Number(form.cout) : undefined,
