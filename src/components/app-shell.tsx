@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { LangToggle, useLang } from "@/lib/i18n";
+import { useAppData } from "@/lib/use-app-data";
 
 const baseLinks = [
   { to: "/", labelKey: "nav.dashboard", icon: Gauge },
