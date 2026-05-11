@@ -366,7 +366,7 @@ function DocumentCard({
             onClick={() => setEditing(true)}
             className="inline-flex items-center gap-1 bg-primary/10 text-primary border border-primary/20 px-2 py-1 rounded-md text-xs font-semibold hover:bg-primary/20"
           >
-            <Pencil size={12} /> Modifier
+            <Pencil size={12} /> {t("common.edit")}
           </button>
         )}
       </div>
