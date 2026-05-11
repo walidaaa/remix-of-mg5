@@ -465,7 +465,9 @@ function BrandsTab() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  const refresh = async () => setBrands(await list());
+  const refresh = async () => {
+    try { setBrands(await list()); } catch (e) { console.error(e); }
+  };
   useEffect(() => { refresh(); }, []);
 
   const submit = async (e: React.FormEvent) => {
