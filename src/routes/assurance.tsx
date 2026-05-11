@@ -348,7 +348,7 @@ function DocumentCard({
           </div>
           <div className="min-w-0">
             <div className="text-xs uppercase tracking-wider text-muted-foreground">{title}</div>
-            <div className="text-lg font-display truncate">{value?.compagnie || "Non renseigné"}</div>
+            <div className="text-lg font-display truncate">{(value as any)?.[REF1_KEY[kind]] || "Non renseigné"}</div>
           </div>
         </div>
         {value && !editing && (
