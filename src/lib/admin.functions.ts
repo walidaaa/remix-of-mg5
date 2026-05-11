@@ -223,6 +223,45 @@ export const adminResetPassword = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// Admin: list ALL vehicles with full info (owner, last vidange, insurance, maintenance count)
+export const adminListAllVehicles = createServerFn({ method: "GET" })
+  .middleware([attachSupabaseAuth, requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await ensureAdmin(context.userId);
+
+    const { data: vehicles, error: vErr } = await supabaseAdmin
+      .from("vehicles")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (vErr) throw new Error(vErr.message);
+
+    const userIds = (vehicles ?? []).map((v) => v.user_id);
+    const [{ data: profiles }, { data: oils }, { data: ins }, { data: maint }] = await Promise.all([
+      supabaseAdmin.from("profiles").select("id, username, display_name, blocked").in("id", userIds.length ? userIds : ["00000000-0000-0000-0000-000000000000"]),
+      supabaseAdmin.from("oil_changes").select("user_id, date, km, type_huile, filtre_huile, cout").order("date", { ascending: false }),
+      supabaseAdmin.from("insurance").select("user_id, compagnie, numero_police, date_debut, date_fin"),
+      supabaseAdmin.from("maintenance_items").select("user_id, type, date, km, cout"),
+    ]);
+
+    const profById = new Map((profiles ?? []).map((p) => [p.id, p]));
+    const lastOilByUser = new Map<string, any>();
+    (oils ?? []).forEach((o) => { if (!lastOilByUser.has(o.user_id)) lastOilByUser.set(o.user_id, o); });
+    const oilCountByUser = new Map<string, number>();
+    (oils ?? []).forEach((o) => oilCountByUser.set(o.user_id, (oilCountByUser.get(o.user_id) ?? 0) + 1));
+    const insByUser = new Map((ins ?? []).map((i) => [i.user_id, i]));
+    const maintCountByUser = new Map<string, number>();
+    (maint ?? []).forEach((m) => maintCountByUser.set(m.user_id, (maintCountByUser.get(m.user_id) ?? 0) + 1));
+
+    return (vehicles ?? []).map((v) => ({
+      ...v,
+      owner: profById.get(v.user_id) ?? null,
+      last_oil: lastOilByUser.get(v.user_id) ?? null,
+      oil_count: oilCountByUser.get(v.user_id) ?? 0,
+      insurance: insByUser.get(v.user_id) ?? null,
+      maintenance_count: maintCountByUser.get(v.user_id) ?? 0,
+    }));
+  });
+
 // Brands
 export const listBrands = createServerFn({ method: "GET" })
   .middleware([attachSupabaseAuth, requireSupabaseAuth])
