@@ -1,220 +1,492 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { useAppData } from "@/lib/use-app-data";
-import { updateInsurance, type Insurance } from "@/lib/storage";
-import { useEffect, useState } from "react";
-import { ShieldCheck, AlertTriangle, CheckCircle2, Save, Calendar, Hash, Building2, Pencil, Clock } from "lucide-react";
+import {
+  updateInsurance,
+  updateVignette,
+  uploadDocument,
+  getDocumentUrl,
+  type Insurance,
+  type Vignette,
+} from "@/lib/storage";
+import { useEffect, useRef, useState } from "react";
+import {
+  ShieldCheck,
+  AlertTriangle,
+  CheckCircle2,
+  Save,
+  Pencil,
+  Camera,
+  Image as ImageIcon,
+  ScrollText,
+  Loader2,
+  Eye,
+} from "lucide-react";
 import { useIsAdmin } from "@/lib/use-is-admin";
 import { AdminOverview } from "@/components/admin-overview";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export const Route = createFileRoute("/assurance")({
   head: () => ({
     meta: [
-      { title: "Assurance — MG5 Maintenance" },
-      { name: "description", content: "Suivi de votre assurance auto." },
+      { title: "Assurance & Vignette — MG5 Maintenance" },
+      { name: "description", content: "Suivi assurance, vignette, dates et coûts." },
     ],
   }),
   component: InsurancePage,
 });
 
+function daysUntil(d?: string) {
+  if (!d) return null;
+  return Math.ceil((new Date(d).getTime() - Date.now()) / 86400000);
+}
+
+function statusOf(j: number | null) {
+  if (j === null) return null;
+  if (j < 0) return "expiree" as const;
+  if (j <= 30) return "bientot" as const;
+  return "ok" as const;
+}
+
 function InsurancePage() {
   const data = useAppData();
   const { isAdmin, checked } = useIsAdmin();
-  const ins = data.insurance;
-  const [editing, setEditing] = useState(false);
+  if (checked && isAdmin) return <AdminOverview view="insurance" />;
+
+  const insJ = daysUntil(data.insurance?.dateFin);
+  const vigJ = daysUntil(data.vignette?.dateFin);
+  const insStatus = statusOf(insJ);
+  const vigStatus = statusOf(vigJ);
+
+  return (
+    <AppShell>
+      <div className="mb-8">
+        <h1 className="text-3xl mb-2">Assurance & Vignette</h1>
+        <p className="text-muted-foreground">Polices, échéances, scans et coûts (DA).</p>
+      </div>
+
+      {/* Récap table */}
+      <div className="rounded-2xl border border-border overflow-hidden gradient-card shadow-card mb-6">
+        <Table>
+          <TableHeader className="bg-secondary/50">
+            <TableRow>
+              <TableHead>Document</TableHead>
+              <TableHead>Référence</TableHead>
+              <TableHead>Début</TableHead>
+              <TableHead>Fin</TableHead>
+              <TableHead>Jours restants</TableHead>
+              <TableHead className="text-right">Coût (DA)</TableHead>
+              <TableHead>Statut</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <RecapRow
+              label="Assurance"
+              icon={ShieldCheck}
+              ref1={data.insurance?.compagnie}
+              ref2={data.insurance?.numeroPolice}
+              dateDebut={data.insurance?.dateDebut}
+              dateFin={data.insurance?.dateFin}
+              j={insJ}
+              cout={data.insurance?.cout}
+              status={insStatus}
+            />
+            <RecapRow
+              label="Vignette"
+              icon={ScrollText}
+              ref1={data.vignette?.compagnie}
+              ref2={data.vignette?.numero}
+              dateDebut={data.vignette?.dateDebut}
+              dateFin={data.vignette?.dateFin}
+              j={vigJ}
+              cout={data.vignette?.cout}
+              status={vigStatus}
+            />
+          </TableBody>
+        </Table>
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-6">
+        <DocumentCard
+          kind="assurance"
+          title="Police d'assurance"
+          icon={ShieldCheck}
+          value={data.insurance}
+          status={insStatus}
+          j={insJ}
+        />
+        <DocumentCard
+          kind="vignette"
+          title="Vignette automobile"
+          icon={ScrollText}
+          value={data.vignette}
+          status={vigStatus}
+          j={vigJ}
+        />
+      </div>
+    </AppShell>
+  );
+}
+
+function RecapRow({
+  label,
+  icon: Icon,
+  ref1,
+  ref2,
+  dateDebut,
+  dateFin,
+  j,
+  cout,
+  status,
+}: {
+  label: string;
+  icon: any;
+  ref1?: string;
+  ref2?: string;
+  dateDebut?: string;
+  dateFin?: string;
+  j: number | null;
+  cout?: number;
+  status: "ok" | "bientot" | "expiree" | null;
+}) {
+  return (
+    <TableRow>
+      <TableCell className="font-medium">
+        <span className="inline-flex items-center gap-2">
+          <Icon size={16} className="text-primary" /> {label}
+        </span>
+      </TableCell>
+      <TableCell className="text-muted-foreground text-xs">
+        <div>{ref1 || "—"}</div>
+        {ref2 && <div className="font-mono">{ref2}</div>}
+      </TableCell>
+      <TableCell className="whitespace-nowrap">{dateDebut ? new Date(dateDebut).toLocaleDateString("fr-FR") : "—"}</TableCell>
+      <TableCell className="whitespace-nowrap">{dateFin ? new Date(dateFin).toLocaleDateString("fr-FR") : "—"}</TableCell>
+      <TableCell className="font-mono">
+        {j === null ? "—" : j < 0 ? `-${Math.abs(j)} j` : `${j} j`}
+      </TableCell>
+      <TableCell className="text-right font-mono">{cout != null ? `${cout.toLocaleString("fr-FR")}` : "—"}</TableCell>
+      <TableCell>
+        {status === null ? (
+          <span className="text-xs text-muted-foreground">Non renseigné</span>
+        ) : (
+          <span
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${
+              status === "expiree"
+                ? "bg-destructive/15 text-destructive"
+                : status === "bientot"
+                ? "bg-warning/15 text-warning"
+                : "bg-success/15 text-success"
+            }`}
+          >
+            {status === "ok" ? <CheckCircle2 size={12} /> : <AlertTriangle size={12} />}
+            {status === "expiree" ? "Expirée" : status === "bientot" ? "Bientôt" : "Valide"}
+          </span>
+        )}
+      </TableCell>
+    </TableRow>
+  );
+}
+
+type DocKind = "assurance" | "vignette";
+
+function DocumentCard({
+  kind,
+  title,
+  icon: Icon,
+  value,
+  status,
+  j,
+}: {
+  kind: DocKind;
+  title: string;
+  icon: any;
+  value: Insurance | Vignette | null;
+  status: "ok" | "bientot" | "expiree" | null;
+  j: number | null;
+}) {
+  const [editing, setEditing] = useState(!value);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState<Insurance>(
-    ins ?? {
-      compagnie: "",
-      numeroPolice: "",
-      dateDebut: new Date().toISOString().slice(0, 10),
-      dateFin: "",
-    }
+  const [uploading, setUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const camRef = useRef<HTMLInputElement>(null);
+
+  const baseInsurance: Insurance = {
+    compagnie: "",
+    numeroPolice: "",
+    dateDebut: new Date().toISOString().slice(0, 10),
+    dateFin: "",
+    cout: undefined,
+    scanUrl: undefined,
+  };
+  const baseVignette: Vignette = {
+    compagnie: "",
+    numero: "",
+    dateDebut: new Date().toISOString().slice(0, 10),
+    dateFin: "",
+    cout: undefined,
+    scanUrl: undefined,
+  };
+
+  const [form, setForm] = useState<Insurance | Vignette>(
+    (value as any) ?? (kind === "assurance" ? baseInsurance : baseVignette),
   );
 
-  useEffect(() => { if (ins) setForm(ins); }, [ins]);
+  useEffect(() => {
+    if (value) setForm(value as any);
+    setEditing(!value);
+  }, [value]);
 
-  const joursRestants = ins?.dateFin
-    ? Math.ceil((new Date(ins.dateFin).getTime() - Date.now()) / 86400000)
-    : null;
-  const dureeJours = ins?.dateDebut && ins?.dateFin
-    ? Math.max(0, Math.ceil((new Date(ins.dateFin).getTime() - new Date(ins.dateDebut).getTime()) / 86400000))
-    : null;
-  const progression = dureeJours && joursRestants !== null
-    ? Math.min(100, Math.max(0, ((dureeJours - Math.max(0, joursRestants)) / dureeJours) * 100))
-    : 0;
+  useEffect(() => {
+    setPreviewUrl(null);
+    if (value?.scanUrl) {
+      getDocumentUrl(value.scanUrl).then(setPreviewUrl);
+    }
+  }, [value?.scanUrl]);
 
-  const status =
-    joursRestants === null
-      ? null
-      : joursRestants < 0
-      ? "expiree"
-      : joursRestants <= 30
-      ? "bientot"
-      : "ok";
+  const set = (k: string, v: any) => setForm((f: any) => ({ ...f, [k]: v }));
+
+  const onFile = async (file: File | null) => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const path = await uploadDocument(kind, file);
+      if (path) {
+        const next: any = { ...form, scanUrl: path };
+        setForm(next);
+        if (kind === "assurance") await updateInsurance(next);
+        else await updateVignette(next);
+      }
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (saving) return;
     setSaving(true);
     try {
-      await updateInsurance(form);
+      if (kind === "assurance") await updateInsurance(form as Insurance);
+      else await updateVignette(form as Vignette);
       setEditing(false);
     } finally {
       setSaving(false);
     }
   };
 
-  if (checked && isAdmin) return <AdminOverview view="insurance" />;
+  const dateDebut = (form as any).dateDebut as string;
+  const dateFin = (form as any).dateFin as string;
+  const cout = (form as any).cout as number | undefined;
+  const ref1 = kind === "assurance" ? (form as Insurance).compagnie : (form as Vignette).compagnie;
+  const ref2Key = kind === "assurance" ? "numeroPolice" : "numero";
+  const ref2 = (form as any)[ref2Key];
 
-  const showForm = !ins || editing;
+  const ringClass =
+    status === "expiree"
+      ? "border-destructive/40"
+      : status === "bientot"
+      ? "border-warning/40"
+      : status === "ok"
+      ? "border-success/40"
+      : "border-border";
 
   return (
-    <AppShell>
-      <div className="flex items-start justify-between gap-4 mb-8 flex-wrap">
-        <div>
-          <h1 className="text-3xl mb-2">Assurance</h1>
-          <p className="text-muted-foreground">
-            {!ins ? "Renseignez votre police d'assurance." : editing ? "Modifiez votre police." : "Police active."}
-          </p>
+    <div className={`rounded-2xl gradient-card shadow-card border ${ringClass} overflow-hidden`}>
+      {/* Header */}
+      <div className="p-5 flex items-start justify-between gap-3 border-b border-border/50">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="rounded-xl bg-primary/15 text-primary p-2.5 shrink-0">
+            <Icon size={20} />
+          </div>
+          <div className="min-w-0">
+            <div className="text-xs uppercase tracking-wider text-muted-foreground">{title}</div>
+            <div className="text-lg font-display truncate">{value?.compagnie || "Non renseigné"}</div>
+          </div>
         </div>
-        {ins && !editing && (
+        {value && !editing && (
           <button
-            onClick={() => { setForm(ins); setEditing(true); }}
-            className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-lg font-semibold shadow-glow hover:opacity-90"
+            onClick={() => setEditing(true)}
+            className="inline-flex items-center gap-1.5 bg-primary/15 text-primary border border-primary/30 px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-primary/25"
           >
-            <Pencil size={18} /> Modifier
+            <Pencil size={14} /> Modifier
           </button>
         )}
       </div>
 
-      {!showForm && ins && (
-        <div className="grid gap-5">
-          {status && (
-            <div className={`rounded-2xl p-5 border-l-4 shadow-card ${
-              status === "expiree" ? "bg-destructive/10 border-destructive"
-              : status === "bientot" ? "bg-warning/10 border-warning"
-              : "bg-success/10 border-success"
-            }`}>
-              <div className="flex items-center gap-3">
-                {status === "ok" ? <CheckCircle2 className="text-success" size={28} />
-                  : <AlertTriangle className={status === "bientot" ? "text-warning" : "text-destructive"} size={28} />}
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-lg">
-                    {status === "expiree" && `Assurance expirée depuis ${Math.abs(joursRestants!)} jours`}
-                    {status === "bientot" && `Expire dans ${joursRestants} jours`}
-                    {status === "ok" && `Valide encore ${joursRestants} jours`}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Échéance : {new Date(ins.dateFin).toLocaleDateString("fr-FR")}
-                  </div>
-                </div>
-              </div>
-              {dureeJours !== null && (
-                <div className="mt-4">
-                  <div className="h-2 rounded-full bg-secondary overflow-hidden">
-                    <div
-                      className={`h-full transition-all ${
-                        status === "expiree" ? "bg-destructive"
-                        : status === "bientot" ? "bg-warning" : "bg-success"
-                      }`}
-                      style={{ width: `${progression}%` }}
-                    />
-                  </div>
-                  <div className="flex justify-between text-xs text-muted-foreground mt-1.5">
-                    <span>{new Date(ins.dateDebut).toLocaleDateString("fr-FR")}</span>
-                    <span>{new Date(ins.dateFin).toLocaleDateString("fr-FR")}</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="rounded-2xl gradient-card p-6 md:p-8 shadow-card">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="rounded-xl bg-primary/15 text-primary p-3"><ShieldCheck size={22} /></div>
-              <div>
-                <div className="text-xs uppercase tracking-wider text-muted-foreground">Police d'assurance</div>
-                <div className="text-xl font-display">{ins.compagnie || "—"}</div>
-              </div>
-            </div>
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-              <DataCard icon={Building2} label="Compagnie" value={ins.compagnie || "—"} />
-              <DataCard icon={Hash} label="N° de police" value={ins.numeroPolice || "—"} mono />
-              <DataCard icon={Calendar} label="Date de début" value={ins.dateDebut ? new Date(ins.dateDebut).toLocaleDateString("fr-FR") : "—"} />
-              <DataCard icon={Calendar} label="Date de fin" value={ins.dateFin ? new Date(ins.dateFin).toLocaleDateString("fr-FR") : "—"} />
-              {joursRestants !== null && (
-                <DataCard
-                  icon={Clock}
-                  label="Jours restants"
-                  value={joursRestants < 0 ? `Expirée (${Math.abs(joursRestants)} j)` : `${joursRestants} jours`}
-                  highlight
-                />
-              )}
-              {dureeJours !== null && (
-                <DataCard icon={Clock} label="Durée totale" value={`${dureeJours} jours`} />
-              )}
-            </div>
-          </div>
+      {/* Status banner */}
+      {status && (
+        <div
+          className={`px-5 py-3 text-sm flex items-center gap-2 border-b border-border/50 ${
+            status === "expiree"
+              ? "bg-destructive/10 text-destructive"
+              : status === "bientot"
+              ? "bg-warning/10 text-warning"
+              : "bg-success/10 text-success"
+          }`}
+        >
+          {status === "ok" ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
+          <span className="font-medium">
+            {status === "expiree" && `Expirée depuis ${Math.abs(j!)} jours`}
+            {status === "bientot" && `Expire dans ${j} jours`}
+            {status === "ok" && `Valide encore ${j} jours`}
+          </span>
         </div>
       )}
 
-      {showForm && (
-        <form onSubmit={submit} className="rounded-2xl gradient-card p-6 md:p-8 shadow-card grid md:grid-cols-2 gap-5">
-          <div className="md:col-span-2 flex items-center gap-3 mb-2">
-            <ShieldCheck className="text-accent" />
-            <h2 className="text-xl">Police d'assurance</h2>
+      {/* Body */}
+      <div className="p-5 grid gap-4">
+        {!editing && value ? (
+          <div className="grid grid-cols-2 gap-3">
+            <Mini label="Référence" value={ref2 || "—"} mono />
+            <Mini label="Coût" value={value.cout != null ? `${value.cout.toLocaleString("fr-FR")} DA` : "—"} />
+            <Mini label="Date début" value={dateDebut ? new Date(dateDebut).toLocaleDateString("fr-FR") : "—"} />
+            <Mini label="Date fin" value={dateFin ? new Date(dateFin).toLocaleDateString("fr-FR") : "—"} />
           </div>
-
-          <Field label="Compagnie">
-            <input value={form.compagnie} onChange={(e) => setForm({ ...form, compagnie: e.target.value })} className="input" placeholder="Ex: SAA, CAAR, CAAT..." />
-          </Field>
-          <Field label="N° de police">
-            <input value={form.numeroPolice} onChange={(e) => setForm({ ...form, numeroPolice: e.target.value })} className="input font-mono" />
-          </Field>
-          <Field label="Date de début">
-            <input type="date" value={form.dateDebut} onChange={(e) => setForm({ ...form, dateDebut: e.target.value })} className="input" />
-          </Field>
-          <Field label="Date de fin">
-            <input type="date" required value={form.dateFin} onChange={(e) => setForm({ ...form, dateFin: e.target.value })} className="input" />
-          </Field>
-
-          <div className="md:col-span-2 flex justify-end gap-2">
-            {ins && (
-              <button type="button" onClick={() => { setEditing(false); setForm(ins); }} className="px-5 py-3 rounded-lg bg-secondary font-semibold">
-                Annuler
+        ) : (
+          <form onSubmit={submit} className="grid gap-4">
+            <div className="grid sm:grid-cols-2 gap-3">
+              <Field label="Compagnie / Agence">
+                <input value={ref1} onChange={(e) => set("compagnie", e.target.value)} className="input" />
+              </Field>
+              <Field label={kind === "assurance" ? "N° police" : "N° vignette"}>
+                <input value={ref2 || ""} onChange={(e) => set(ref2Key, e.target.value)} className="input font-mono" />
+              </Field>
+              <Field label="Date début">
+                <input type="date" value={dateDebut} onChange={(e) => set("dateDebut", e.target.value)} className="input" />
+              </Field>
+              <Field label="Date fin">
+                <input type="date" required value={dateFin} onChange={(e) => set("dateFin", e.target.value)} className="input" />
+              </Field>
+              <Field label="Coût (DA)">
+                <input
+                  type="number"
+                  value={cout ?? ""}
+                  onChange={(e) => set("cout", e.target.value ? Number(e.target.value) : undefined)}
+                  className="input"
+                  placeholder="0"
+                />
+              </Field>
+            </div>
+            <div className="flex justify-end gap-2">
+              {value && (
+                <button
+                  type="button"
+                  onClick={() => { setEditing(false); setForm(value as any); }}
+                  className="px-4 py-2 rounded-lg bg-secondary font-semibold"
+                >
+                  Annuler
+                </button>
+              )}
+              <button
+                disabled={saving}
+                className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2 rounded-lg font-semibold shadow-glow disabled:opacity-50"
+              >
+                <Save size={16} /> {saving ? "…" : "Enregistrer"}
               </button>
-            )}
-            <button disabled={saving} className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold shadow-glow disabled:opacity-50">
-              <Save size={18} /> {saving ? "Enregistrement…" : "Enregistrer"}
-            </button>
+            </div>
+          </form>
+        )}
+
+        {/* Scanner */}
+        <div className="rounded-xl bg-secondary/40 border border-border/50 p-4 grid gap-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <ImageIcon size={16} className="text-primary" /> Document scanné
+            </div>
+            <div className="flex gap-2">
+              <input
+                ref={camRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                hidden
+                onChange={(e) => onFile(e.target.files?.[0] ?? null)}
+              />
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*,application/pdf"
+                hidden
+                onChange={(e) => onFile(e.target.files?.[0] ?? null)}
+              />
+              <button
+                type="button"
+                onClick={() => camRef.current?.click()}
+                disabled={uploading}
+                className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground px-3 py-1.5 rounded-lg text-sm font-semibold shadow-glow disabled:opacity-50"
+              >
+                {uploading ? <Loader2 className="animate-spin" size={14} /> : <Camera size={14} />} Scanner
+              </button>
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                disabled={uploading}
+                className="inline-flex items-center gap-1.5 bg-secondary text-foreground px-3 py-1.5 rounded-lg text-sm font-semibold disabled:opacity-50"
+              >
+                <ImageIcon size={14} /> Importer
+              </button>
+            </div>
           </div>
 
-          <style>{`.input{width:100%;background:var(--color-input);border:1px solid var(--color-border);border-radius:.625rem;padding:.75rem 1rem;color:var(--color-foreground);outline:none}.input:focus{border-color:var(--color-ring);box-shadow:0 0 0 3px color-mix(in oklab,var(--color-ring) 25%,transparent)}`}</style>
-        </form>
+          {previewUrl ? (
+            <button
+              type="button"
+              onClick={() => setShowPreview(true)}
+              className="relative group rounded-lg overflow-hidden border border-border bg-background"
+            >
+              <img src={previewUrl} alt={`Scan ${title}`} className="w-full max-h-56 object-contain" />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition flex items-center justify-center opacity-0 group-hover:opacity-100">
+                <span className="inline-flex items-center gap-1.5 text-white text-sm font-semibold">
+                  <Eye size={14} /> Agrandir
+                </span>
+              </div>
+            </button>
+          ) : (
+            <div className="text-xs text-muted-foreground text-center py-6 border border-dashed border-border rounded-lg">
+              Aucun document. Utilisez « Scanner » pour photographier la {kind}.
+            </div>
+          )}
+        </div>
+      </div>
+
+      {showPreview && previewUrl && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+          onClick={() => setShowPreview(false)}
+        >
+          <img src={previewUrl} alt="Scan" className="max-h-full max-w-full object-contain" />
+        </div>
       )}
-    </AppShell>
+
+      <style>{`.input{width:100%;background:var(--color-input);border:1px solid var(--color-border);border-radius:.5rem;padding:.55rem .85rem;color:var(--color-foreground);outline:none}.input:focus{border-color:var(--color-ring)}`}</style>
+    </div>
   );
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">{label}</div>
+      <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1.5">{label}</div>
       {children}
     </label>
   );
 }
 
-function DataCard({ icon: Icon, label, value, mono, highlight }: { icon: any; label: string; value: string; mono?: boolean; highlight?: boolean }) {
+function Mini({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
-    <div className="bg-secondary/40 rounded-xl p-3.5 border border-border/50">
-      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">
-        <Icon size={11} /> {label}
-      </div>
-      <div className={`${mono ? "font-mono" : ""} ${highlight ? "text-primary font-semibold" : "text-foreground"}`}>
-        {value}
-      </div>
+    <div className="bg-background/60 rounded-lg p-3 border border-border/50">
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className={`mt-0.5 ${mono ? "font-mono" : ""}`}>{value}</div>
     </div>
   );
 }
