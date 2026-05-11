@@ -314,20 +314,20 @@ function FullDataModal({ data, onClose }: { data: ReturnType<typeof useAppData>;
   const insDays = ins?.dateFin ? Math.ceil((+new Date(ins.dateFin) - Date.now()) / 86400000) : null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-start md:items-center justify-center p-3 md:p-6 overflow-y-auto" onClick={onClose}>
-      <div className="bg-background border border-border rounded-2xl shadow-card w-full max-w-4xl my-4 md:my-0" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between p-5 border-b border-border sticky top-0 bg-background rounded-t-2xl">
-          <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-primary/15 text-primary p-2"><FileText size={20} /></div>
-            <div>
-              <h2 className="text-xl font-display">{t("veh.modal.title")}</h2>
-              <p className="text-xs text-muted-foreground">{t("veh.modal.sub")}</p>
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-start md:items-center justify-center p-2 md:p-6 overflow-y-auto" onClick={onClose}>
+      <div className="bg-background border border-border rounded-xl md:rounded-2xl shadow-card w-full max-w-4xl my-2 md:my-0" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-3 md:p-5 border-b border-border sticky top-0 bg-background rounded-t-xl md:rounded-t-2xl z-10">
+          <div className="flex items-center gap-2 md:gap-3 min-w-0">
+            <div className="rounded-lg bg-primary/15 text-primary p-1.5 md:p-2 shrink-0"><FileText size={16} className="md:hidden" /><FileText size={20} className="hidden md:block" /></div>
+            <div className="min-w-0">
+              <h2 className="text-sm md:text-xl font-display truncate">{t("veh.modal.title")}</h2>
+              <p className="text-[10px] md:text-xs text-muted-foreground truncate">{t("veh.modal.sub")}</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-secondary" aria-label={t("common.close")}><X size={18} /></button>
+          <button onClick={onClose} className="p-1.5 md:p-2 rounded-lg hover:bg-secondary shrink-0" aria-label={t("common.close")}><X size={16} /></button>
         </div>
 
-        <div className="p-5 grid gap-5">
+        <div className="p-3 md:p-5 grid gap-3 md:gap-5">
           <Section icon={Car} title={t("veh.section.vehicle")} tone="primary">
             <Grid>
               <Info label={t("veh.matricule")} value={v.matricule || "—"} mono />
