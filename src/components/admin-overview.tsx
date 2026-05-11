@@ -8,7 +8,7 @@ import {
 } from "@/lib/admin.functions";
 import { AppShell } from "@/components/app-shell";
 import { getBrandImage } from "@/lib/brand-images";
-import { Car, Droplet, Wrench, ShieldCheck, Users, Gauge, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { Car, Droplet, Wrench, ShieldCheck, Users, Gauge, Calendar, ChevronLeft, ChevronRight, Search, X } from "lucide-react";
 import { MAINTENANCE_LABELS, type MaintenanceType } from "@/lib/storage";
 
 type View = "dashboard" | "vehicles" | "oil" | "maintenance" | "insurance";
