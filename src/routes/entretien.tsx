@@ -10,6 +10,8 @@ import {
 } from "@/lib/storage";
 import { useState } from "react";
 import { Plus, Trash2, Wrench, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { useIsAdmin } from "@/lib/use-is-admin";
+import { AdminOverview } from "@/components/admin-overview";
 
 export const Route = createFileRoute("/entretien")({
   head: () => ({
