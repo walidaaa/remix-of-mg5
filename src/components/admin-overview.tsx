@@ -8,7 +8,7 @@ import {
 } from "@/lib/admin.functions";
 import { AppShell } from "@/components/app-shell";
 import { getBrandImage } from "@/lib/brand-images";
-import { Car, Droplet, Wrench, ShieldCheck, Users, Gauge, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { Car, Droplet, Wrench, ShieldCheck, Users, Gauge, Calendar, ChevronLeft, ChevronRight, Search, X } from "lucide-react";
 import { MAINTENANCE_LABELS, type MaintenanceType } from "@/lib/storage";
 
 type View = "dashboard" | "vehicles" | "oil" | "maintenance" | "insurance";
@@ -130,6 +130,40 @@ function PaginationBar({
   );
 }
 
+function SearchBar({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
+  return (
+    <div className="mb-5 relative max-w-xl">
+      <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full pl-9 pr-9 py-2.5 rounded-xl bg-card border border-border focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm shadow-card transition"
+      />
+      {value && (
+        <button
+          onClick={() => onChange("")}
+          className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md hover:bg-secondary text-muted-foreground"
+          aria-label="Effacer"
+        >
+          <X size={14} />
+        </button>
+      )}
+    </div>
+  );
+}
+
+function useFilter<T>(items: T[], query: string, getFields: (item: T) => Array<string | number | null | undefined>) {
+  return useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return items;
+    return items.filter((it) =>
+      getFields(it).some((f) => f != null && String(f).toLowerCase().includes(q))
+    );
+  }, [items, query, getFields]);
+}
+
 function Header({ icon: Icon, title, subtitle, count }: { icon: any; title: string; subtitle: string; count?: number }) {
   return (
     <div className="mb-8">
@@ -231,13 +265,19 @@ function VehicleCard({ v }: { v: any }) {
 }
 
 function Vehicles({ vehicles }: any) {
-  const p = usePagination<any>(vehicles);
+  const [q, setQ] = useState("");
+  const filtered = useFilter<any>(vehicles, q, (v) => [
+    v.marque, v.modele, v.matricule, v.couleur, v.annee, v.transmission,
+    v.owner?.username, v.owner?.display_name,
+  ]);
+  const p = usePagination<any>(filtered);
   return (
     <AppShell>
       <Header icon={Car} title="Tous les véhicules" subtitle="Tous les véhicules de tous les utilisateurs" count={vehicles.length} />
+      <SearchBar value={q} onChange={setQ} placeholder="Rechercher par marque, modèle, matricule, propriétaire…" />
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {p.pageItems.map((v: any) => <VehicleCard key={v.user_id} v={v} />)}
-        {vehicles.length === 0 && <p className="text-muted-foreground">Aucun véhicule.</p>}
+        {filtered.length === 0 && <p className="text-muted-foreground">Aucun véhicule.</p>}
       </div>
       <PaginationBar {...p} count={p.pageItems.length} />
     </AppShell>
@@ -245,10 +285,17 @@ function Vehicles({ vehicles }: any) {
 }
 
 function Oils({ oils }: any) {
-  const p = usePagination<any>(oils);
+  const [q, setQ] = useState("");
+  const filtered = useFilter<any>(oils, q, (o) => [
+    o.vehicle?.marque, o.vehicle?.modele, o.vehicle?.matricule,
+    o.type_huile, o.filtre_huile, o.notes,
+    o.owner?.username, o.owner?.display_name,
+  ]);
+  const p = usePagination<any>(filtered);
   return (
     <AppShell>
       <Header icon={Droplet} title="Toutes les vidanges" subtitle="Historique global" count={oils.length} />
+      <SearchBar value={q} onChange={setQ} placeholder="Rechercher par véhicule, type d'huile, propriétaire…" />
       <div className="grid gap-3">
         {p.pageItems.map((o: any) => (
           <div key={o.id} className="rounded-xl gradient-card p-4 shadow-card flex items-center gap-4 flex-wrap">
@@ -270,7 +317,7 @@ function Oils({ oils }: any) {
             </div>
           </div>
         ))}
-        {oils.length === 0 && <p className="text-muted-foreground">Aucune vidange.</p>}
+        {filtered.length === 0 && <p className="text-muted-foreground">Aucune vidange.</p>}
       </div>
       <PaginationBar {...p} count={p.pageItems.length} />
     </AppShell>
@@ -278,10 +325,17 @@ function Oils({ oils }: any) {
 }
 
 function Maint({ items }: any) {
-  const p = usePagination<any>(items);
+  const [q, setQ] = useState("");
+  const filtered = useFilter<any>(items, q, (m) => [
+    m.type, MAINTENANCE_LABELS[m.type as MaintenanceType]?.label,
+    m.vehicle?.marque, m.vehicle?.modele, m.vehicle?.matricule,
+    m.owner?.username, m.owner?.display_name, m.notes,
+  ]);
+  const p = usePagination<any>(filtered);
   return (
     <AppShell>
       <Header icon={Wrench} title="Tous les entretiens" subtitle="Historique global" count={items.length} />
+      <SearchBar value={q} onChange={setQ} placeholder="Rechercher par type, véhicule, propriétaire…" />
       <div className="grid md:grid-cols-2 gap-3">
         {p.pageItems.map((m: any) => {
           const def = MAINTENANCE_LABELS[m.type as MaintenanceType];
@@ -304,7 +358,7 @@ function Maint({ items }: any) {
             </div>
           );
         })}
-        {items.length === 0 && <p className="text-muted-foreground">Aucun entretien.</p>}
+        {filtered.length === 0 && <p className="text-muted-foreground">Aucun entretien.</p>}
       </div>
       <PaginationBar {...p} count={p.pageItems.length} />
     </AppShell>
@@ -312,10 +366,17 @@ function Maint({ items }: any) {
 }
 
 function Ins({ items }: any) {
-  const p = usePagination<any>(items);
+  const [q, setQ] = useState("");
+  const filtered = useFilter<any>(items, q, (i) => [
+    i.compagnie, i.numero_police,
+    i.vehicle?.marque, i.vehicle?.modele, i.vehicle?.matricule,
+    i.owner?.username, i.owner?.display_name,
+  ]);
+  const p = usePagination<any>(filtered);
   return (
     <AppShell>
       <Header icon={ShieldCheck} title="Toutes les assurances" subtitle="Polices de tous les utilisateurs" count={items.length} />
+      <SearchBar value={q} onChange={setQ} placeholder="Rechercher par compagnie, n° police, véhicule, propriétaire…" />
       <div className="grid md:grid-cols-2 gap-3">
         {p.pageItems.map((i: any) => {
           const j = i.date_fin ? Math.ceil((+new Date(i.date_fin) - Date.now()) / 86400000) : null;
@@ -348,7 +409,7 @@ function Ins({ items }: any) {
             </div>
           );
         })}
-        {items.length === 0 && <p className="text-muted-foreground">Aucune assurance.</p>}
+        {filtered.length === 0 && <p className="text-muted-foreground">Aucune assurance.</p>}
       </div>
       <PaginationBar {...p} count={p.pageItems.length} />
     </AppShell>
