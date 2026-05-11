@@ -393,11 +393,11 @@ function DocumentCard({
         ) : (
           <form onSubmit={submit} className="grid gap-4">
             <div className="grid sm:grid-cols-2 gap-3">
-              <Field label="Compagnie / Agence">
-                <input value={ref1} onChange={(e) => set("compagnie", e.target.value)} className="input" />
+              <Field label={REF1_LABEL[kind]}>
+                <input value={ref1} onChange={(e) => set(REF1_KEY[kind], e.target.value)} className="input" />
               </Field>
-              <Field label={kind === "assurance" ? "N° police" : "N° vignette"}>
-                <input value={ref2 || ""} onChange={(e) => set(ref2Key, e.target.value)} className="input font-mono" />
+              <Field label={REF2_LABEL[kind]}>
+                <input value={ref2 || ""} onChange={(e) => set(REF2_KEY[kind], e.target.value)} className="input font-mono" />
               </Field>
               <Field label="Date début">
                 <input type="date" value={dateDebut} onChange={(e) => set("dateDebut", e.target.value)} className="input" />
