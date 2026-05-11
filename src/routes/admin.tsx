@@ -111,14 +111,17 @@ function UsersTab() {
   const del = useServerFn(adminDeleteUser);
   const reset = useServerFn(adminResetPassword);
   const fetchBrands = useServerFn(listBrands);
+  const fetchModels = useServerFn(listModels);
 
   const [users, setUsers] = useState<UserRow[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
+  const [models, setModels] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [brand, setBrand] = useState("");
+  const [model, setModel] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -135,13 +138,21 @@ function UsersTab() {
   };
   useEffect(() => { refresh(); }, []);
 
+  useEffect(() => {
+    if (!brand) { setModels([]); setModel(""); return; }
+    fetchModels({ data: { brandName: brand } }).then((m) => {
+      setModels(m);
+      setModel((curr) => (m.find((x) => x.name === curr) ? curr : ""));
+    }).catch(() => setModels([]));
+  }, [brand, fetchModels]);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErr(null);
     setBusy(true);
     try {
-      await create({ data: { username, password, brand: brand || undefined } });
-      setUsername(""); setPassword("");
+      await create({ data: { username, password, brand: brand || undefined, model: model || undefined } });
+      setUsername(""); setPassword(""); setModel("");
       setShowForm(false);
       await refresh();
     } catch (e: any) {
