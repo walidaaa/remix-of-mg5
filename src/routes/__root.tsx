@@ -124,14 +124,16 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   const router = useTanRouter();
   const pathname = router.state.location.pathname;
   const [routing, setRouting] = useState(false);
+  const [decidedFor, setDecidedFor] = useState<string | null>(null);
 
   useEffect(() => {
     if (loading) return;
     if (!user) {
+      setDecidedFor(null);
       if (!PUBLIC_PATHS.has(pathname)) router.navigate({ to: "/login" });
       return;
     }
-    // Logged in: decide where to land
+    if (decidedFor === user.id) return;
     let cancelled = false;
     setRouting(true);
     (async () => {
@@ -142,18 +144,20 @@ function AuthGate({ children }: { children: React.ReactNode }) {
       if (cancelled) return;
       const isAdmin = !!role;
       const hasVehicle = !!veh && !!veh.matricule;
+      const currentPath = router.state.location.pathname;
 
-      if (PUBLIC_PATHS.has(pathname)) {
+      if (PUBLIC_PATHS.has(currentPath)) {
         router.navigate({ to: isAdmin ? "/admin" : hasVehicle ? "/" : "/vehicule" });
-      } else if (!isAdmin && !hasVehicle && pathname !== "/vehicule") {
+      } else if (!isAdmin && !hasVehicle && currentPath !== "/vehicule") {
         router.navigate({ to: "/vehicule" });
       }
+      setDecidedFor(user.id);
       setRouting(false);
     })();
     return () => { cancelled = true; };
-  }, [user, loading, pathname, router]);
+  }, [user, loading, decidedFor, router, pathname]);
 
-  if (loading || routing) {
+  if (loading || (routing && decidedFor !== user?.id)) {
     return (
       <div className="min-h-screen grid place-items-center bg-background">
         <div className="text-muted-foreground text-sm">Chargement…</div>
