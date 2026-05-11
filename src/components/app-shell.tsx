@@ -1,5 +1,5 @@
-import { Link, useLocation } from "@tanstack/react-router";
-import { Car, Droplet, ShieldCheck, Gauge, Wrench, LogOut, ShieldUser } from "lucide-react";
+import { Link, useLocation, useRouterState } from "@tanstack/react-router";
+import { Car, Droplet, ShieldCheck, Gauge, Wrench, LogOut, ShieldUser, Loader2 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
