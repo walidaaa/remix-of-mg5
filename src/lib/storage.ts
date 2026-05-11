@@ -260,8 +260,44 @@ export async function updateInsurance(i: Insurance) {
     numero_police: i.numeroPolice,
     date_debut: i.dateDebut || null,
     date_fin: i.dateFin || null,
-  });
+    cout: i.cout ?? null,
+    scan_url: i.scanUrl ?? null,
+  } as any);
   ping();
+}
+
+export async function updateVignette(v: Vignette) {
+  const userId = await uid();
+  if (!userId) return;
+  await supabase.from("vignette" as any).upsert({
+    user_id: userId,
+    compagnie: v.compagnie,
+    numero: v.numero,
+    date_debut: v.dateDebut || null,
+    date_fin: v.dateFin || null,
+    cout: v.cout ?? null,
+    scan_url: v.scanUrl ?? null,
+  } as any);
+  ping();
+}
+
+export async function uploadDocument(kind: "assurance" | "vignette", file: File): Promise<string | null> {
+  const userId = await uid();
+  if (!userId) return null;
+  const ext = file.name.split(".").pop() || "jpg";
+  const path = `${userId}/${kind}-${Date.now()}.${ext}`;
+  const { error } = await supabase.storage.from("documents").upload(path, file, {
+    cacheControl: "3600",
+    upsert: true,
+    contentType: file.type || "image/jpeg",
+  });
+  if (error) return null;
+  return path;
+}
+
+export async function getDocumentUrl(path: string): Promise<string | null> {
+  const { data } = await supabase.storage.from("documents").createSignedUrl(path, 60 * 60);
+  return data?.signedUrl ?? null;
 }
 
 export type Scan = { id: string; value: string; at: string };
