@@ -191,7 +191,7 @@ function UsersTab() {
       </div>
 
       {showForm && (
-        <form onSubmit={submit} className="rounded-2xl gradient-card p-5 shadow-card grid gap-3 md:grid-cols-4">
+        <form onSubmit={submit} className="rounded-2xl gradient-card p-5 shadow-card grid gap-3 md:grid-cols-5">
           <input
             placeholder="Username" required minLength={3} value={username}
             onChange={(e) => setUsername(e.target.value)}
@@ -209,10 +209,18 @@ function UsersTab() {
             <option value="">— Marque —</option>
             {brands.map((b) => <option key={b.id} value={b.name}>{b.name}</option>)}
           </select>
+          <select
+            value={model} onChange={(e) => setModel(e.target.value)}
+            className="bg-input border border-border rounded-lg px-3 py-2"
+            disabled={!brand || models.length === 0}
+          >
+            <option value="">{models.length ? "— Modèle —" : "Aucun modèle"}</option>
+            {models.map((m) => <option key={m.id} value={m.name}>{m.name}</option>)}
+          </select>
           <button disabled={busy} className="bg-primary text-primary-foreground rounded-lg px-4 py-2 font-semibold disabled:opacity-50">
             {busy ? "..." : "Créer"}
           </button>
-          {err && <div className="md:col-span-4 text-sm text-destructive">{err}</div>}
+          {err && <div className="md:col-span-5 text-sm text-destructive">{err}</div>}
         </form>
       )}
 
