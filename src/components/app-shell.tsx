@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { LangToggle, useLang } from "@/lib/i18n";
+import { useAppData } from "@/lib/use-app-data";
 
 const baseLinks = [
   { to: "/", labelKey: "nav.dashboard", icon: Gauge },
@@ -17,6 +18,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { pathname } = useLocation();
   const { user, signOut } = useAuth();
   const { t } = useLang();
+  const data = useAppData();
+  const brandLabel = (data.vehicle?.modele || data.vehicle?.marque || "MG5").toUpperCase();
   const [isAdmin, setIsAdmin] = useState(false);
   const [username, setUsername] = useState<string | null>(null);
 
@@ -46,7 +49,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Mobile top bar */}
       <header className="md:hidden fixed top-0 inset-x-0 z-40 h-14 bg-card/95 backdrop-blur border-b border-border flex items-center justify-between px-4">
         <div className="flex items-baseline gap-2">
-          <span className="font-display text-xl text-primary leading-none">MG5</span>
+          <span className="font-display text-xl text-primary leading-none">{brandLabel}</span>
           <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Maintenance</span>
         </div>
         <div className="flex items-center gap-2 min-w-0">
@@ -64,7 +67,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <aside className="hidden md:flex fixed left-0 top-0 h-screen w-64 flex-col border-r border-border bg-card/50 backdrop-blur p-6 gap-2">
         <div className="mb-6 flex items-start justify-between gap-2">
           <div>
-            <div className="font-display text-3xl text-primary">MG5</div>
+            <div className="font-display text-3xl text-primary">{brandLabel}</div>
             <div className="text-xs text-muted-foreground uppercase tracking-widest">Maintenance</div>
           </div>
           <LangToggle />
