@@ -257,47 +257,78 @@ function UsersTab() {
         <div className="grid place-items-center py-10"><Loader2 className="animate-spin" /></div>
       ) : (
         <div className="rounded-2xl border border-border overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-secondary/50">
-              <tr>
-                <th className="text-left px-4 py-3">Username</th>
-                <th className="text-left px-4 py-3">Rôle</th>
-                <th className="text-left px-4 py-3">Véhicule</th>
-                <th className="text-right px-4 py-3">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((u) => (
-                <tr key={u.id} className="border-t border-border">
-                  <td className="px-4 py-3 font-medium">{u.username ?? "—"}</td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-block text-xs px-2 py-1 rounded ${
-                      u.role === "admin" ? "bg-primary/20 text-primary" : "bg-secondary text-muted-foreground"
-                    }`}>{u.role}</span>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {u.vehicle ? `${u.vehicle.marque} ${u.vehicle.modele} ${u.vehicle.matricule}` : "—"}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <button
-                      onClick={() => onReset(u.id, u.username)}
-                      className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded hover:bg-secondary"
-                      title="Réinitialiser mot de passe"
-                    >
-                      <KeyRound size={14} />
-                    </button>
-                    <button
-                      onClick={() => onDelete(u.id, u.username)}
-                      className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded text-destructive hover:bg-destructive/10 ml-1"
-                      title="Supprimer"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <Table>
+            <TableHeader className="bg-secondary/50">
+              <TableRow>
+                <TableHead>Username</TableHead>
+                <TableHead>Rôle</TableHead>
+                <TableHead>Véhicule</TableHead>
+                <TableHead>KM</TableHead>
+                <TableHead>Statut</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {users.map((u) => {
+                const km = u.vehicle?.km_actuel ?? 0;
+                const overdue = km > 10000;
+                return (
+                  <TableRow key={u.id}>
+                    <TableCell className="font-medium">{u.username ?? "—"}</TableCell>
+                    <TableCell>
+                      <span className={`inline-block text-xs px-2 py-1 rounded ${
+                        u.role === "admin" ? "bg-primary/20 text-primary" : "bg-secondary text-muted-foreground"
+                      }`}>{u.role}</span>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {u.vehicle ? `${u.vehicle.marque} ${u.vehicle.modele} ${u.vehicle.matricule}` : "—"}
+                    </TableCell>
+                    <TableCell className={overdue ? "text-destructive font-semibold" : ""}>
+                      {u.vehicle ? km.toLocaleString("fr-FR") : "—"}
+                    </TableCell>
+                    <TableCell>
+                      {u.blocked ? (
+                        <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-destructive/15 text-destructive">
+                          <Lock size={12} /> Bloqué
+                        </span>
+                      ) : overdue ? (
+                        <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-warning/15 text-warning">
+                          Vidange requise
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-success/15 text-success">
+                          OK
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="inline-flex flex-wrap gap-1 justify-end">
+                        {overdue && u.vehicle && (
+                          <Button size="sm" variant="secondary" onClick={() => onResetVidange(u.id, u.username)} title="Approuver / Reset vidange">
+                            <RotateCcw size={14} /> Reset vidange
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant={u.blocked ? "secondary" : "destructive"}
+                          onClick={() => onToggleBlock(u.id, u.username, u.blocked)}
+                          title={u.blocked ? "Débloquer" : "Bloquer"}
+                        >
+                          {u.blocked ? <><Unlock size={14} /> Débloquer</> : <><Lock size={14} /> Bloquer</>}
+                        </Button>
+                        <Button size="icon" variant="ghost" onClick={() => onReset(u.id, u.username)} title="Réinitialiser mot de passe">
+                          <KeyRound size={14} />
+                        </Button>
+                        <Button size="icon" variant="ghost" onClick={() => onDelete(u.id, u.username)} title="Supprimer" className="text-destructive hover:text-destructive">
+                          <Trash2 size={14} />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
         </div>
       )}
     </div>
