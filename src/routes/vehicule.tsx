@@ -1,18 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { useAppData } from "@/lib/use-app-data";
-import { updateVehicle, addOilChange, type Vehicle, MAINTENANCE_LABELS, type MaintenanceType } from "@/lib/storage";
+import { updateVehicle, addOilChange, type Vehicle } from "@/lib/storage";
 import { useEffect, useMemo, useState } from "react";
 import { Save, FileText, X, Car, Droplet, Wrench, ShieldCheck, Gauge, Calendar, Coins, Pencil } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { listBrands, listModels } from "@/lib/admin.functions";
 import { useIsAdmin } from "@/lib/use-is-admin";
 import { AdminOverview } from "@/components/admin-overview";
+import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/vehicule")({
   head: () => ({
     meta: [
-      { title: "Véhicule — MG5 Maintenance" },
+      { title: "Véhicule — Cars Maintenance" },
       { name: "description", content: "Informations matricule, transmission, couleur de votre véhicule." },
     ],
   }),
@@ -21,6 +22,7 @@ export const Route = createFileRoute("/vehicule")({
 
 function VehiclePage() {
   const data = useAppData();
+  const { t } = useLang();
   const [showAll, setShowAll] = useState(false);
   const [editing, setEditing] = useState(false);
   const { isAdmin, checked } = useIsAdmin();
@@ -90,9 +92,9 @@ function VehiclePage() {
     <AppShell>
       <div className="flex items-start justify-between gap-4 mb-8 flex-wrap">
         <div>
-          <h1 className="text-3xl mb-2">Mon véhicule</h1>
+          <h1 className="text-3xl mb-2">{t("veh.title")}</h1>
           <p className="text-muted-foreground">
-            {!v ? "Renseignez les informations de votre voiture." : editing ? "Modifiez les informations." : "Informations enregistrées."}
+            {!v ? t("veh.intro.empty") : editing ? t("veh.intro.editing") : t("veh.intro.saved")}
           </p>
         </div>
         {v && (
@@ -103,7 +105,7 @@ function VehiclePage() {
                 onClick={() => { setForm(v); setEditing(true); }}
                 className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-lg font-semibold shadow-glow hover:opacity-90 transition"
               >
-                <Pencil size={18} /> Modifier
+                <Pencil size={18} /> {t("common.edit")}
               </button>
             )}
             <button
@@ -111,7 +113,7 @@ function VehiclePage() {
               onClick={() => setShowAll(true)}
               className="inline-flex items-center gap-2 bg-primary/15 text-primary border border-primary/30 px-4 py-2.5 rounded-lg font-semibold hover:bg-primary/25 transition"
             >
-              <FileText size={18} /> Voir toutes les données
+              <FileText size={18} /> {t("veh.viewAll")}
             </button>
           </div>
         )}
@@ -122,21 +124,21 @@ function VehiclePage() {
       {!showForm && v && (
         <div className="rounded-2xl gradient-card p-6 md:p-8 shadow-card">
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-            <Info label="Matricule" value={v.matricule || "—"} mono />
-            <Info label="Marque" value={v.marque || "—"} />
-            <Info label="Modèle" value={v.modele || "—"} />
-            <Info label="Année" value={String(v.annee)} />
-            <Info label="Couleur" value={v.couleur || "—"} />
-            <Info label="Boîte" value={v.transmission} />
-            <Info label="Kilométrage" value={v.kmActuel.toLocaleString("fr-FR") + " km"} highlight />
-            <Info label="Intervalle vidange" value={v.intervalleVidange.toLocaleString("fr-FR") + " km"} />
+            <Info label={t("veh.matricule")} value={v.matricule || "—"} mono />
+            <Info label={t("veh.brand")} value={v.marque || "—"} />
+            <Info label={t("veh.model")} value={v.modele || "—"} />
+            <Info label={t("veh.year")} value={String(v.annee)} />
+            <Info label={t("veh.color")} value={v.couleur || "—"} />
+            <Info label={t("veh.transmission.short")} value={t(`veh.transmission.${v.transmission === "automatique" ? "auto" : "manual"}` as any)} />
+            <Info label={t("dash.km")} value={v.kmActuel.toLocaleString("fr-FR") + " " + t("common.km")} highlight />
+            <Info label={t("veh.interval.short")} value={v.intervalleVidange.toLocaleString("fr-FR") + " " + t("common.km")} />
           </div>
         </div>
       )}
 
       {showForm && (
       <form onSubmit={submit} className="rounded-2xl gradient-card p-6 md:p-8 shadow-card grid gap-5 md:grid-cols-2">
-        <Field label="Matricule" required>
+        <Field label={t("veh.matricule")} required>
           <input
             value={form.matricule}
             onChange={(e) => set("matricule", e.target.value.toUpperCase())}
@@ -146,7 +148,7 @@ function VehiclePage() {
           />
         </Field>
 
-        <Field label="Marque" required>
+        <Field label={t("veh.brand")} required>
           <input
             value={form.marque || "—"}
             readOnly
@@ -155,7 +157,7 @@ function VehiclePage() {
           />
         </Field>
 
-        <Field label="Modèle" required>
+        <Field label={t("veh.model")} required>
           <select
             value={form.modele}
             onChange={(e) => set("modele", e.target.value)}
@@ -163,14 +165,14 @@ function VehiclePage() {
             className="input"
             disabled={models.length === 0}
           >
-            <option value="">{models.length ? "— Choisir —" : "Aucun modèle disponible"}</option>
+            <option value="">{models.length ? t("veh.choose") : t("veh.noModel")}</option>
             {models.map((m) => (
               <option key={m.id} value={m.name}>{m.name}</option>
             ))}
           </select>
         </Field>
 
-        <Field label="Année">
+        <Field label={t("veh.year")}>
           <input
             type="number"
             value={form.annee}
@@ -179,35 +181,35 @@ function VehiclePage() {
           />
         </Field>
 
-        <Field label="Couleur">
+        <Field label={t("veh.color")}>
           <input
             value={form.couleur}
             onChange={(e) => set("couleur", e.target.value)}
-            placeholder="Rouge, Blanc..."
+            placeholder={t("veh.color.placeholder")}
             className="input"
           />
         </Field>
 
-        <Field label="Boîte de vitesse">
+        <Field label={t("veh.transmission")}>
           <div className="grid grid-cols-2 gap-2">
-            {(["manuelle", "automatique"] as const).map((t) => (
+            {(["manuelle", "automatique"] as const).map((tp) => (
               <button
                 type="button"
-                key={t}
-                onClick={() => set("transmission", t)}
+                key={tp}
+                onClick={() => set("transmission", tp)}
                 className={`py-3 rounded-lg font-medium capitalize transition ${
-                  form.transmission === t
+                  form.transmission === tp
                     ? "bg-primary text-primary-foreground shadow-glow"
                     : "bg-secondary text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {t}
+                {t(`veh.transmission.${tp === "automatique" ? "auto" : "manual"}` as any)}
               </button>
             ))}
           </div>
         </Field>
 
-        <Field label="Kilométrage actuel">
+        <Field label={t("veh.km")}>
           <input
             type="number"
             value={form.kmActuel}
@@ -216,7 +218,7 @@ function VehiclePage() {
           />
         </Field>
 
-        <Field label="Intervalle vidange (km) — référence">
+        <Field label={t("veh.interval")}>
           <input
             type="number"
             value={form.intervalleVidange}
@@ -226,7 +228,7 @@ function VehiclePage() {
         </Field>
 
         {isFirstSetup && (
-          <Field label="Dernière vidange (km)">
+          <Field label={t("veh.lastOil")}>
             <input
               type="number"
               value={dernierVidangeKm}
@@ -235,23 +237,23 @@ function VehiclePage() {
               className="input"
             />
             <p className="text-xs text-muted-foreground mt-1">
-              Saisissez le kilométrage de la dernière vidange effectuée. Une entrée sera créée automatiquement.
+              {t("veh.lastOilHelp")}
             </p>
           </Field>
         )}
 
         {(form.intervalleVidange > 0 && (data.oilChanges[0]?.km || Number(dernierVidangeKm) > 0)) && (
           <div className="md:col-span-2 rounded-xl border border-primary/30 bg-primary/10 p-4 grid gap-1">
-            <div className="text-xs uppercase tracking-wider text-primary font-semibold">Calcul prochaine vidange</div>
+            <div className="text-xs uppercase tracking-wider text-primary font-semibold">{t("veh.nextCalc")}</div>
             <div className="text-sm text-muted-foreground">
-              Dernière vidange : <span className="font-mono text-foreground">{(data.oilChanges[0]?.km ?? Number(dernierVidangeKm || 0)).toLocaleString("fr-FR")} km</span>
-              {" + "}Intervalle : <span className="font-mono text-foreground">{form.intervalleVidange.toLocaleString("fr-FR")} km</span>
+              {t("veh.nextCalc.last")} <span className="font-mono text-foreground">{(data.oilChanges[0]?.km ?? Number(dernierVidangeKm || 0)).toLocaleString("fr-FR")} {t("common.km")}</span>
+              {" + "}{t("veh.nextCalc.interval")} <span className="font-mono text-foreground">{form.intervalleVidange.toLocaleString("fr-FR")} {t("common.km")}</span>
             </div>
             <div className="text-lg font-display text-primary">
-              Prochaine vidange obligatoire à {prochainKm.toLocaleString("fr-FR")} km
+              {t("veh.nextCalc.next")} {prochainKm.toLocaleString("fr-FR")} {t("common.km")}
               {form.kmActuel > 0 && (
                 <span className="text-sm text-muted-foreground ml-2">
-                  ({(prochainKm - form.kmActuel).toLocaleString("fr-FR")} km restants)
+                  ({(prochainKm - form.kmActuel).toLocaleString("fr-FR")} {t("veh.nextCalc.remaining")})
                 </span>
               )}
             </div>
@@ -261,11 +263,11 @@ function VehiclePage() {
         <div className="md:col-span-2 flex justify-end gap-2">
           {v && (
             <button type="button" onClick={() => { setEditing(false); setForm(v); }} className="inline-flex items-center gap-2 bg-secondary text-foreground px-5 py-3 rounded-lg font-semibold hover:opacity-90">
-              Annuler
+              {t("common.cancel")}
             </button>
           )}
           <button className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold shadow-glow hover:opacity-90">
-            <Save size={18} /> Enregistrer
+            <Save size={18} /> {t("common.save")}
           </button>
         </div>
       </form>
@@ -304,6 +306,7 @@ function Field({ label, children, required }: { label: string; children: React.R
 
 function FullDataModal({ data, onClose }: { data: ReturnType<typeof useAppData>; onClose: () => void }) {
   const v = data.vehicle!;
+  const { t } = useLang();
   const totalOil = useMemo(() => data.oilChanges.reduce((s, o) => s + (Number(o.cout) || 0), 0), [data.oilChanges]);
   const totalMaint = useMemo(() => data.maintenance.reduce((s, m) => s + (Number(m.cout) || 0), 0), [data.maintenance]);
   const total = totalOil + totalMaint;
@@ -317,92 +320,86 @@ function FullDataModal({ data, onClose }: { data: ReturnType<typeof useAppData>;
           <div className="flex items-center gap-3">
             <div className="rounded-lg bg-primary/15 text-primary p-2"><FileText size={20} /></div>
             <div>
-              <h2 className="text-xl font-display">Toutes les données du véhicule</h2>
-              <p className="text-xs text-muted-foreground">Synthèse complète</p>
+              <h2 className="text-xl font-display">{t("veh.modal.title")}</h2>
+              <p className="text-xs text-muted-foreground">{t("veh.modal.sub")}</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-secondary" aria-label="Fermer"><X size={18} /></button>
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-secondary" aria-label={t("common.close")}><X size={18} /></button>
         </div>
 
         <div className="p-5 grid gap-5">
-          {/* Vehicle */}
-          <Section icon={Car} title="Véhicule" tone="primary">
+          <Section icon={Car} title={t("veh.section.vehicle")} tone="primary">
             <Grid>
-              <Info label="Matricule" value={v.matricule || "—"} mono />
-              <Info label="Marque" value={v.marque} />
-              <Info label="Modèle" value={v.modele} />
-              <Info label="Année" value={String(v.annee)} />
-              <Info label="Couleur" value={v.couleur || "—"} />
-              <Info label="Transmission" value={v.transmission} />
-              <Info label="Km actuel" value={v.kmActuel.toLocaleString("fr-FR") + " km"} />
-              <Info label="Intervalle vidange" value={v.intervalleVidange.toLocaleString("fr-FR") + " km"} />
+              <Info label={t("veh.matricule")} value={v.matricule || "—"} mono />
+              <Info label={t("veh.brand")} value={v.marque} />
+              <Info label={t("veh.model")} value={v.modele} />
+              <Info label={t("veh.year")} value={String(v.annee)} />
+              <Info label={t("veh.color")} value={v.couleur || "—"} />
+              <Info label={t("veh.transmission.short")} value={t(`veh.transmission.${v.transmission === "automatique" ? "auto" : "manual"}` as any)} />
+              <Info label={t("dash.km")} value={v.kmActuel.toLocaleString("fr-FR") + " " + t("common.km")} />
+              <Info label={t("veh.interval.short")} value={v.intervalleVidange.toLocaleString("fr-FR") + " " + t("common.km")} />
             </Grid>
           </Section>
 
-          {/* Costs */}
-          <Section icon={Coins} title="Coûts cumulés" tone="success">
+          <Section icon={Coins} title={t("veh.section.costs")} tone="success">
             <Grid>
-              <Info label="Vidanges" value={`${totalOil.toLocaleString("fr-FR")} DH`} />
-              <Info label="Entretiens" value={`${totalMaint.toLocaleString("fr-FR")} DH`} />
-              <Info label="Total global" value={`${total.toLocaleString("fr-FR")} DH`} highlight />
+              <Info label={t("veh.costs.oil")} value={`${totalOil.toLocaleString("fr-FR")} DH`} />
+              <Info label={t("veh.costs.maint")} value={`${totalMaint.toLocaleString("fr-FR")} DH`} />
+              <Info label={t("veh.costs.total")} value={`${total.toLocaleString("fr-FR")} DH`} highlight />
             </Grid>
           </Section>
 
-          {/* Insurance */}
-          <Section icon={ShieldCheck} title="Assurance" tone={insDays === null ? "muted" : insDays < 0 ? "destructive" : insDays <= 30 ? "warning" : "success"}>
+          <Section icon={ShieldCheck} title={t("veh.section.insurance")} tone={insDays === null ? "muted" : insDays < 0 ? "destructive" : insDays <= 30 ? "warning" : "success"}>
             {ins ? (
               <Grid>
-                <Info label="Compagnie" value={ins.compagnie || "—"} />
-                <Info label="N° police" value={ins.numeroPolice || "—"} mono />
-                <Info label="Du" value={ins.dateDebut ? new Date(ins.dateDebut).toLocaleDateString("fr-FR") : "—"} />
-                <Info label="Au" value={ins.dateFin ? new Date(ins.dateFin).toLocaleDateString("fr-FR") : "—"} />
+                <Info label={t("veh.ins.company")} value={ins.compagnie || "—"} />
+                <Info label={t("veh.ins.policy")} value={ins.numeroPolice || "—"} mono />
+                <Info label={t("veh.ins.from")} value={ins.dateDebut ? new Date(ins.dateDebut).toLocaleDateString("fr-FR") : "—"} />
+                <Info label={t("veh.ins.to")} value={ins.dateFin ? new Date(ins.dateFin).toLocaleDateString("fr-FR") : "—"} />
                 {insDays !== null && (
-                  <Info label="Statut" value={insDays < 0 ? `Expirée ${Math.abs(insDays)}j` : `${insDays} j restants`} highlight />
+                  <Info label={t("veh.ins.status")} value={insDays < 0 ? `${t("ins.status.expired")} ${Math.abs(insDays)} ${t("common.days")}` : `${insDays} ${t("common.days")}`} highlight />
                 )}
               </Grid>
             ) : (
-              <p className="text-sm text-muted-foreground">Aucune assurance enregistrée.</p>
+              <p className="text-sm text-muted-foreground">{t("veh.ins.none")}</p>
             )}
           </Section>
 
-          {/* Oil changes */}
-          <Section icon={Droplet} title={`Vidanges (${data.oilChanges.length})`} tone="primary">
+          <Section icon={Droplet} title={`${t("veh.section.oil")} (${data.oilChanges.length})`} tone="primary">
             {data.oilChanges.length ? (
               <div className="grid gap-2">
                 {data.oilChanges.map((o) => (
                   <div key={o.id} className="rounded-lg bg-secondary/40 p-3 text-sm flex items-center justify-between gap-3 flex-wrap">
                     <div className="flex items-center gap-3 flex-wrap">
                       <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Calendar size={11} />{new Date(o.date).toLocaleDateString("fr-FR")}</span>
-                      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Gauge size={11} />{o.km.toLocaleString("fr-FR")} km</span>
+                      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Gauge size={11} />{o.km.toLocaleString("fr-FR")} {t("common.km")}</span>
                       <span className="px-2 py-0.5 rounded bg-primary/15 text-primary text-xs">{o.typeHuile}</span>
-                      {o.filtreHuile && <span className="text-xs text-muted-foreground">Filtre: {o.filtreHuile}</span>}
+                      {o.filtreHuile && <span className="text-xs text-muted-foreground">{t("dash.field.filter")}: {o.filtreHuile}</span>}
                     </div>
                     <span className="font-mono text-sm">{o.cout != null ? `${o.cout} DH` : "—"}</span>
                   </div>
                 ))}
               </div>
-            ) : <p className="text-sm text-muted-foreground">Aucune vidange.</p>}
+            ) : <p className="text-sm text-muted-foreground">{t("veh.ins.noneShort")}</p>}
           </Section>
 
-          {/* Maintenance */}
-          <Section icon={Wrench} title={`Entretiens (${data.maintenance.length})`} tone="warning">
+          <Section icon={Wrench} title={`${t("veh.section.maintenance")} (${data.maintenance.length})`} tone="warning">
             {data.maintenance.length ? (
               <div className="grid gap-2">
                 {data.maintenance.map((m) => {
-                  const def = MAINTENANCE_LABELS[m.type as MaintenanceType];
                   return (
                     <div key={m.id} className="rounded-lg bg-secondary/40 p-3 text-sm flex items-center justify-between gap-3 flex-wrap">
                       <div className="flex items-center gap-3 flex-wrap">
-                        <span className="font-semibold">{def?.label ?? m.type}</span>
+                        <span className="font-semibold">{t(`mt.${m.type}` as any)}</span>
                         <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Calendar size={11} />{new Date(m.date).toLocaleDateString("fr-FR")}</span>
-                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Gauge size={11} />{m.km.toLocaleString("fr-FR")} km</span>
+                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Gauge size={11} />{m.km.toLocaleString("fr-FR")} {t("common.km")}</span>
                       </div>
                       <span className="font-mono text-sm">{m.cout != null ? `${m.cout} DH` : "—"}</span>
                     </div>
                   );
                 })}
               </div>
-            ) : <p className="text-sm text-muted-foreground">Aucun entretien.</p>}
+            ) : <p className="text-sm text-muted-foreground">{t("veh.maint.none")}</p>}
           </Section>
         </div>
       </div>

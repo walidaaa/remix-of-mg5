@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { useIsAdmin } from "@/lib/use-is-admin";
 import { AdminOverview } from "@/components/admin-overview";
+import { useLang } from "@/lib/i18n";
 import {
   Table,
   TableBody,
@@ -39,7 +40,7 @@ import {
 export const Route = createFileRoute("/assurance")({
   head: () => ({
     meta: [
-      { title: "Assurance & Vignette — MG5 Maintenance" },
+      { title: "Assurance & Vignette — Cars Maintenance" },
       { name: "description", content: "Suivi assurance, vignette, dates et coûts." },
     ],
   }),
@@ -61,6 +62,7 @@ function statusOf(j: number | null) {
 function InsurancePage() {
   const data = useAppData();
   const { isAdmin, checked } = useIsAdmin();
+  const { t } = useLang();
   if (checked && isAdmin) return <AdminOverview view="insurance" />;
 
   const insJ = daysUntil(data.insurance?.dateFin);
@@ -73,27 +75,26 @@ function InsurancePage() {
   return (
     <AppShell>
       <div className="mb-8">
-        <h1 className="text-3xl mb-2">Documents véhicule</h1>
-        <p className="text-muted-foreground">Assurance, vignette, carte grise — dates, scans et coûts (DA).</p>
+        <h1 className="text-3xl mb-2">{t("ins.title")}</h1>
+        <p className="text-muted-foreground">{t("ins.intro")}</p>
       </div>
 
-      {/* Récap table */}
       <div className="rounded-2xl border border-border overflow-hidden gradient-card shadow-card mb-6">
         <Table>
           <TableHeader className="bg-secondary/50">
             <TableRow>
-              <TableHead>Document</TableHead>
-              <TableHead>Référence</TableHead>
-              <TableHead>Début</TableHead>
-              <TableHead>Fin</TableHead>
-              <TableHead>Jours restants</TableHead>
-              <TableHead className="text-right">Coût (DA)</TableHead>
-              <TableHead>Statut</TableHead>
+              <TableHead>{t("ins.col.doc")}</TableHead>
+              <TableHead>{t("ins.col.ref")}</TableHead>
+              <TableHead>{t("ins.col.start")}</TableHead>
+              <TableHead>{t("ins.col.end")}</TableHead>
+              <TableHead>{t("ins.col.daysLeft")}</TableHead>
+              <TableHead className="text-right">{t("ins.col.cost")}</TableHead>
+              <TableHead>{t("ins.col.status")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             <RecapRow
-              label="Assurance"
+              label={t("ins.assurance")}
               icon={ShieldCheck}
               ref1={data.insurance?.compagnie}
               ref2={data.insurance?.numeroPolice}
@@ -104,7 +105,7 @@ function InsurancePage() {
               status={insStatus}
             />
             <RecapRow
-              label="Vignette"
+              label={t("ins.vignette")}
               icon={ScrollText}
               ref1={data.vignette?.compagnie}
               ref2={data.vignette?.numero}
@@ -115,7 +116,7 @@ function InsurancePage() {
               status={vigStatus}
             />
             <RecapRow
-              label="Carte grise"
+              label={t("ins.carte")}
               icon={Car}
               ref1={data.vehicleDoc?.organisme}
               ref2={data.vehicleDoc?.numero}
@@ -132,7 +133,7 @@ function InsurancePage() {
       <div className="grid lg:grid-cols-2 xl:grid-cols-3 gap-6">
         <DocumentCard
           kind="assurance"
-          title="Police d'assurance"
+          title={t("ins.policy")}
           icon={ShieldCheck}
           value={data.insurance}
           status={insStatus}
@@ -140,7 +141,7 @@ function InsurancePage() {
         />
         <DocumentCard
           kind="vignette"
-          title="Vignette automobile"
+          title={t("ins.vignetteAuto")}
           icon={ScrollText}
           value={data.vignette}
           status={vigStatus}
@@ -148,7 +149,7 @@ function InsurancePage() {
         />
         <DocumentCard
           kind="vehicle"
-          title="Carte grise / Permis"
+          title={t("ins.cartePermis")}
           icon={Car}
           value={data.vehicleDoc}
           status={vehStatus}
@@ -180,6 +181,7 @@ function RecapRow({
   cout?: number;
   status: "ok" | "bientot" | "expiree" | null;
 }) {
+  const { t } = useLang();
   return (
     <TableRow>
       <TableCell className="font-medium">
@@ -194,12 +196,12 @@ function RecapRow({
       <TableCell className="whitespace-nowrap">{dateDebut ? new Date(dateDebut).toLocaleDateString("fr-FR") : "—"}</TableCell>
       <TableCell className="whitespace-nowrap">{dateFin ? new Date(dateFin).toLocaleDateString("fr-FR") : "—"}</TableCell>
       <TableCell className="font-mono">
-        {j === null ? "—" : j < 0 ? `-${Math.abs(j)} j` : `${j} j`}
+        {j === null ? "—" : j < 0 ? `-${Math.abs(j)} ${t("common.days")}` : `${j} ${t("common.days")}`}
       </TableCell>
       <TableCell className="text-right font-mono">{cout != null ? `${cout.toLocaleString("fr-FR")}` : "—"}</TableCell>
       <TableCell>
         {status === null ? (
-          <span className="text-xs text-muted-foreground">Non renseigné</span>
+          <span className="text-xs text-muted-foreground">{t("common.notSet")}</span>
         ) : (
           <span
             className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${
@@ -211,12 +213,28 @@ function RecapRow({
             }`}
           >
             {status === "ok" ? <CheckCircle2 size={12} /> : <AlertTriangle size={12} />}
-            {status === "expiree" ? "Expirée" : status === "bientot" ? "Bientôt" : "Valide"}
+            {status === "expiree" ? t("ins.status.expired") : status === "bientot" ? t("ins.status.soon") : t("ins.status.valid")}
           </span>
         )}
       </TableCell>
     </TableRow>
   );
+}
+
+function useDocLabels() {
+  const { t } = useLang();
+  return {
+    REF1_LABEL: {
+      assurance: t("ins.field.company"),
+      vignette: t("ins.field.agency"),
+      vehicle: t("ins.field.org"),
+    } as Record<DocKind, string>,
+    REF2_LABEL: {
+      assurance: t("ins.field.policyNo"),
+      vignette: t("ins.field.vignetteNo"),
+      vehicle: t("ins.field.regNo"),
+    } as Record<DocKind, string>,
+  };
 }
 
 type DocKind = "assurance" | "vignette" | "vehicle";
@@ -230,16 +248,6 @@ const REF2_KEY: Record<DocKind, string> = {
   assurance: "numeroPolice",
   vignette: "numero",
   vehicle: "numero",
-};
-const REF1_LABEL: Record<DocKind, string> = {
-  assurance: "Compagnie",
-  vignette: "Agence vignette",
-  vehicle: "Organisme",
-};
-const REF2_LABEL: Record<DocKind, string> = {
-  assurance: "N° police",
-  vignette: "N° vignette",
-  vehicle: "N° immatriculation / carte",
 };
 
 function DocumentCard({
@@ -257,6 +265,8 @@ function DocumentCard({
   status: "ok" | "bientot" | "expiree" | null;
   j: number | null;
 }) {
+  const { t } = useLang();
+  const { REF1_LABEL, REF2_LABEL } = useDocLabels();
   const [editing, setEditing] = useState(!value);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -348,7 +358,7 @@ function DocumentCard({
           </div>
           <div className="min-w-0">
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{title}</div>
-            <div className="text-sm font-display truncate">{(value as any)?.[REF1_KEY[kind]] || "Non renseigné"}</div>
+            <div className="text-sm font-display truncate">{(value as any)?.[REF1_KEY[kind]] || t("common.notSet")}</div>
           </div>
         </div>
         {value && !editing && (
@@ -356,7 +366,7 @@ function DocumentCard({
             onClick={() => setEditing(true)}
             className="inline-flex items-center gap-1 bg-primary/10 text-primary border border-primary/20 px-2 py-1 rounded-md text-xs font-semibold hover:bg-primary/20"
           >
-            <Pencil size={12} /> Modifier
+            <Pencil size={12} /> {t("common.edit")}
           </button>
         )}
       </div>
@@ -374,9 +384,9 @@ function DocumentCard({
         >
           {status === "ok" ? <CheckCircle2 size={14} /> : <AlertTriangle size={14} />}
           <span className="font-medium">
-            {status === "expiree" && `Expirée depuis ${Math.abs(j!)} j`}
-            {status === "bientot" && `Expire dans ${j} j`}
-            {status === "ok" && `Valide ${j} j`}
+            {status === "expiree" && `${t("ins.status.expiredSince")} ${Math.abs(j!)} ${t("common.days")}`}
+            {status === "bientot" && `${t("ins.status.expiresIn")} ${j} ${t("common.days")}`}
+            {status === "ok" && `${t("ins.status.validFor")} ${j} ${t("common.days")}`}
           </span>
         </div>
       )}
@@ -385,10 +395,10 @@ function DocumentCard({
       <div className="p-4 grid gap-3">
         {!editing && value ? (
           <div className="grid grid-cols-2 gap-2">
-            <Mini label="Réf." value={ref2 || "—"} mono />
-            <Mini label="Coût" value={value.cout != null ? `${value.cout.toLocaleString("fr-FR")} DA` : "—"} />
-            <Mini label="Début" value={dateDebut ? new Date(dateDebut).toLocaleDateString("fr-FR") : "—"} />
-            <Mini label="Fin" value={dateFin ? new Date(dateFin).toLocaleDateString("fr-FR") : "—"} />
+            <Mini label={t("ins.field.ref")} value={ref2 || "—"} mono />
+            <Mini label={t("ins.field.cost.short")} value={value.cout != null ? `${value.cout.toLocaleString("fr-FR")} DA` : "—"} />
+            <Mini label={t("ins.col.start")} value={dateDebut ? new Date(dateDebut).toLocaleDateString("fr-FR") : "—"} />
+            <Mini label={t("ins.col.end")} value={dateFin ? new Date(dateFin).toLocaleDateString("fr-FR") : "—"} />
           </div>
         ) : (
           <form onSubmit={submit} className="grid gap-3">
@@ -399,13 +409,13 @@ function DocumentCard({
               <Field label={REF2_LABEL[kind]}>
                 <input value={ref2 || ""} onChange={(e) => set(REF2_KEY[kind], e.target.value)} className="input font-mono" />
               </Field>
-              <Field label="Date début">
+              <Field label={t("ins.field.start")}>
                 <input type="date" value={dateDebut} onChange={(e) => set("dateDebut", e.target.value)} className="input" />
               </Field>
-              <Field label="Date fin">
+              <Field label={t("ins.field.end")}>
                 <input type="date" required value={dateFin} onChange={(e) => set("dateFin", e.target.value)} className="input" />
               </Field>
-              <Field label="Coût (DA)">
+              <Field label={t("ins.field.cost")}>
                 <input
                   type="number"
                   value={cout ?? ""}
@@ -422,14 +432,14 @@ function DocumentCard({
                   onClick={() => { setEditing(false); setForm(value as any); }}
                   className="px-3 py-1.5 rounded-md bg-secondary text-xs font-semibold"
                 >
-                  Annuler
+                  {t("common.cancel")}
                 </button>
               )}
               <button
                 disabled={saving}
                 className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground px-3 py-1.5 rounded-md text-xs font-semibold disabled:opacity-50"
               >
-                <Save size={14} /> {saving ? "…" : "Enregistrer"}
+                <Save size={14} /> {saving ? "…" : t("common.save")}
               </button>
             </div>
           </form>
@@ -439,7 +449,7 @@ function DocumentCard({
         <div className="rounded-lg bg-secondary/40 border border-border/50 px-3 py-2 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-xs text-muted-foreground min-w-0">
             <ImageIcon size={14} className="text-primary shrink-0" />
-            <span className="truncate">{previewUrl ? "Document disponible" : "Aucun document"}</span>
+            <span className="truncate">{previewUrl ? t("ins.scan.has") : t("ins.scan.none")}</span>
           </div>
           <div className="flex gap-1.5">
             <input ref={camRef} type="file" accept="image/*" capture="environment" hidden onChange={(e) => onFile(e.target.files?.[0] ?? null)} />
@@ -449,9 +459,9 @@ function DocumentCard({
                 type="button"
                 onClick={() => setShowPreview(true)}
                 className="inline-flex items-center gap-1 bg-accent/20 text-accent-foreground border border-accent/30 px-2 py-1 rounded-md text-xs font-semibold hover:bg-accent/30"
-                title="Voir"
+                title={t("common.view")}
               >
-                <Eye size={12} /> Voir
+                <Eye size={12} /> {t("common.view")}
               </button>
             )}
             <button
@@ -459,18 +469,18 @@ function DocumentCard({
               onClick={() => camRef.current?.click()}
               disabled={uploading}
               className="inline-flex items-center gap-1 bg-primary text-primary-foreground px-2 py-1 rounded-md text-xs font-semibold disabled:opacity-50"
-              title="Scanner"
+              title={t("ins.scan.scan")}
             >
-              {uploading ? <Loader2 className="animate-spin" size={12} /> : <Camera size={12} />} Scan
+              {uploading ? <Loader2 className="animate-spin" size={12} /> : <Camera size={12} />} {t("ins.scan.scan")}
             </button>
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
               disabled={uploading}
               className="inline-flex items-center gap-1 bg-secondary text-foreground border border-border px-2 py-1 rounded-md text-xs font-semibold disabled:opacity-50"
-              title="Importer"
+              title={t("ins.scan.import")}
             >
-              <ImageIcon size={12} /> Import
+              <ImageIcon size={12} /> {t("ins.scan.import")}
             </button>
           </div>
         </div>
