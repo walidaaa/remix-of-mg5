@@ -339,24 +339,24 @@ function DocumentCard({
       : "border-border";
 
   return (
-    <div className={`rounded-2xl gradient-card shadow-card border ${ringClass} overflow-hidden`}>
+    <div className={`rounded-xl gradient-card shadow-card border ${ringClass} overflow-hidden text-sm`}>
       {/* Header */}
-      <div className="p-5 flex items-start justify-between gap-3 border-b border-border/50">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="rounded-xl bg-primary/15 text-primary p-2.5 shrink-0">
-            <Icon size={20} />
+      <div className="px-4 py-3 flex items-start justify-between gap-2 border-b border-border/50">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="rounded-lg bg-primary/15 text-primary p-2 shrink-0">
+            <Icon size={16} />
           </div>
           <div className="min-w-0">
-            <div className="text-xs uppercase tracking-wider text-muted-foreground">{title}</div>
-            <div className="text-lg font-display truncate">{(value as any)?.[REF1_KEY[kind]] || "Non renseigné"}</div>
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{title}</div>
+            <div className="text-sm font-display truncate">{(value as any)?.[REF1_KEY[kind]] || "Non renseigné"}</div>
           </div>
         </div>
         {value && !editing && (
           <button
             onClick={() => setEditing(true)}
-            className="inline-flex items-center gap-1.5 bg-primary/15 text-primary border border-primary/30 px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-primary/25"
+            className="inline-flex items-center gap-1 bg-primary/10 text-primary border border-primary/20 px-2 py-1 rounded-md text-xs font-semibold hover:bg-primary/20"
           >
-            <Pencil size={14} /> Modifier
+            <Pencil size={12} /> Modifier
           </button>
         )}
       </div>
@@ -364,7 +364,7 @@ function DocumentCard({
       {/* Status banner */}
       {status && (
         <div
-          className={`px-5 py-3 text-sm flex items-center gap-2 border-b border-border/50 ${
+          className={`px-4 py-2 text-xs flex items-center gap-2 border-b border-border/50 ${
             status === "expiree"
               ? "bg-destructive/10 text-destructive"
               : status === "bientot"
@@ -372,27 +372,27 @@ function DocumentCard({
               : "bg-success/10 text-success"
           }`}
         >
-          {status === "ok" ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
+          {status === "ok" ? <CheckCircle2 size={14} /> : <AlertTriangle size={14} />}
           <span className="font-medium">
-            {status === "expiree" && `Expirée depuis ${Math.abs(j!)} jours`}
-            {status === "bientot" && `Expire dans ${j} jours`}
-            {status === "ok" && `Valide encore ${j} jours`}
+            {status === "expiree" && `Expirée depuis ${Math.abs(j!)} j`}
+            {status === "bientot" && `Expire dans ${j} j`}
+            {status === "ok" && `Valide ${j} j`}
           </span>
         </div>
       )}
 
       {/* Body */}
-      <div className="p-5 grid gap-4">
+      <div className="p-4 grid gap-3">
         {!editing && value ? (
-          <div className="grid grid-cols-2 gap-3">
-            <Mini label="Référence" value={ref2 || "—"} mono />
+          <div className="grid grid-cols-2 gap-2">
+            <Mini label="Réf." value={ref2 || "—"} mono />
             <Mini label="Coût" value={value.cout != null ? `${value.cout.toLocaleString("fr-FR")} DA` : "—"} />
-            <Mini label="Date début" value={dateDebut ? new Date(dateDebut).toLocaleDateString("fr-FR") : "—"} />
-            <Mini label="Date fin" value={dateFin ? new Date(dateFin).toLocaleDateString("fr-FR") : "—"} />
+            <Mini label="Début" value={dateDebut ? new Date(dateDebut).toLocaleDateString("fr-FR") : "—"} />
+            <Mini label="Fin" value={dateFin ? new Date(dateFin).toLocaleDateString("fr-FR") : "—"} />
           </div>
         ) : (
-          <form onSubmit={submit} className="grid gap-4">
-            <div className="grid sm:grid-cols-2 gap-3">
+          <form onSubmit={submit} className="grid gap-3">
+            <div className="grid sm:grid-cols-2 gap-2">
               <Field label={REF1_LABEL[kind]}>
                 <input value={ref1} onChange={(e) => set(REF1_KEY[kind], e.target.value)} className="input" />
               </Field>
@@ -420,80 +420,59 @@ function DocumentCard({
                 <button
                   type="button"
                   onClick={() => { setEditing(false); setForm(value as any); }}
-                  className="px-4 py-2 rounded-lg bg-secondary font-semibold"
+                  className="px-3 py-1.5 rounded-md bg-secondary text-xs font-semibold"
                 >
                   Annuler
                 </button>
               )}
               <button
                 disabled={saving}
-                className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2 rounded-lg font-semibold shadow-glow disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground px-3 py-1.5 rounded-md text-xs font-semibold disabled:opacity-50"
               >
-                <Save size={16} /> {saving ? "…" : "Enregistrer"}
+                <Save size={14} /> {saving ? "…" : "Enregistrer"}
               </button>
             </div>
           </form>
         )}
 
-        {/* Scanner */}
-        <div className="rounded-xl bg-secondary/40 border border-border/50 p-4 grid gap-3">
-          <div className="flex items-center justify-between gap-2 flex-wrap">
-            <div className="flex items-center gap-2 text-sm font-semibold">
-              <ImageIcon size={16} className="text-primary" /> Document scanné
-            </div>
-            <div className="flex gap-2">
-              <input
-                ref={camRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                hidden
-                onChange={(e) => onFile(e.target.files?.[0] ?? null)}
-              />
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*,application/pdf"
-                hidden
-                onChange={(e) => onFile(e.target.files?.[0] ?? null)}
-              />
-              <button
-                type="button"
-                onClick={() => camRef.current?.click()}
-                disabled={uploading}
-                className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground px-3 py-1.5 rounded-lg text-sm font-semibold shadow-glow disabled:opacity-50"
-              >
-                {uploading ? <Loader2 className="animate-spin" size={14} /> : <Camera size={14} />} Scanner
-              </button>
-              <button
-                type="button"
-                onClick={() => fileRef.current?.click()}
-                disabled={uploading}
-                className="inline-flex items-center gap-1.5 bg-secondary text-foreground px-3 py-1.5 rounded-lg text-sm font-semibold disabled:opacity-50"
-              >
-                <ImageIcon size={14} /> Importer
-              </button>
-            </div>
+        {/* Scanner — compact buttons row */}
+        <div className="rounded-lg bg-secondary/40 border border-border/50 px-3 py-2 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground min-w-0">
+            <ImageIcon size={14} className="text-primary shrink-0" />
+            <span className="truncate">{previewUrl ? "Document disponible" : "Aucun document"}</span>
           </div>
-
-          {previewUrl ? (
+          <div className="flex gap-1.5">
+            <input ref={camRef} type="file" accept="image/*" capture="environment" hidden onChange={(e) => onFile(e.target.files?.[0] ?? null)} />
+            <input ref={fileRef} type="file" accept="image/*,application/pdf" hidden onChange={(e) => onFile(e.target.files?.[0] ?? null)} />
+            {previewUrl && (
+              <button
+                type="button"
+                onClick={() => setShowPreview(true)}
+                className="inline-flex items-center gap-1 bg-accent/20 text-accent-foreground border border-accent/30 px-2 py-1 rounded-md text-xs font-semibold hover:bg-accent/30"
+                title="Voir"
+              >
+                <Eye size={12} /> Voir
+              </button>
+            )}
             <button
               type="button"
-              onClick={() => setShowPreview(true)}
-              className="relative group rounded-lg overflow-hidden border border-border bg-background"
+              onClick={() => camRef.current?.click()}
+              disabled={uploading}
+              className="inline-flex items-center gap-1 bg-primary text-primary-foreground px-2 py-1 rounded-md text-xs font-semibold disabled:opacity-50"
+              title="Scanner"
             >
-              <img src={previewUrl} alt={`Scan ${title}`} className="w-full max-h-56 object-contain" />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition flex items-center justify-center opacity-0 group-hover:opacity-100">
-                <span className="inline-flex items-center gap-1.5 text-white text-sm font-semibold">
-                  <Eye size={14} /> Agrandir
-                </span>
-              </div>
+              {uploading ? <Loader2 className="animate-spin" size={12} /> : <Camera size={12} />} Scan
             </button>
-          ) : (
-            <div className="text-xs text-muted-foreground text-center py-6 border border-dashed border-border rounded-lg">
-              Aucun document. Utilisez « Scanner » pour photographier la {kind}.
-            </div>
-          )}
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading}
+              className="inline-flex items-center gap-1 bg-secondary text-foreground border border-border px-2 py-1 rounded-md text-xs font-semibold disabled:opacity-50"
+              title="Importer"
+            >
+              <ImageIcon size={12} /> Import
+            </button>
+          </div>
         </div>
       </div>
 
@@ -506,7 +485,7 @@ function DocumentCard({
         </div>
       )}
 
-      <style>{`.input{width:100%;background:var(--color-input);border:1px solid var(--color-border);border-radius:.5rem;padding:.55rem .85rem;color:var(--color-foreground);outline:none}.input:focus{border-color:var(--color-ring)}`}</style>
+      <style>{`.input{width:100%;background:var(--color-input);border:1px solid var(--color-border);border-radius:.5rem;padding:.45rem .7rem;font-size:.8rem;color:var(--color-foreground);outline:none}.input:focus{border-color:var(--color-ring)}`}</style>
     </div>
   );
 }
