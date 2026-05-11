@@ -56,7 +56,7 @@ export function AdminOverview({ view }: { view: View }) {
   }
 
   if (view === "dashboard") return <Dashboard vehicles={vehicles} oils={oils} maint={maint} ins={ins} />;
-  if (view === "vehicles") return <Vehicles vehicles={vehicles} />;
+  if (view === "vehicles") return <Vehicles vehicles={vehicles} oils={oils} maint={maint} ins={ins} />;
   if (view === "oil") return <Oils oils={oils} />;
   if (view === "maintenance") return <Maint items={maint} />;
   return <Ins items={ins} />;
