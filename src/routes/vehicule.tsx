@@ -416,9 +416,9 @@ function Section({ icon: Icon, title, tone, children }: { icon: any; title: stri
     muted: "border-border text-muted-foreground",
   };
   return (
-    <div className={`rounded-xl gradient-card border ${map[tone]} p-4 shadow-card`}>
-      <div className="flex items-center gap-2 text-xs uppercase tracking-wider font-semibold mb-3">
-        <Icon size={14} /> {title}
+    <div className={`rounded-lg md:rounded-xl gradient-card border ${map[tone]} p-2.5 md:p-4 shadow-card`}>
+      <div className="flex items-center gap-2 text-[10px] md:text-xs uppercase tracking-wider font-semibold mb-2 md:mb-3">
+        <Icon size={13} /> {title}
       </div>
       {children}
     </div>
@@ -426,14 +426,14 @@ function Section({ icon: Icon, title, tone, children }: { icon: any; title: stri
 }
 
 function Grid({ children }: { children: React.ReactNode }) {
-  return <div className="grid grid-cols-2 md:grid-cols-4 gap-3">{children}</div>;
+  return <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">{children}</div>;
 }
 
 function Info({ label, value, mono, highlight }: { label: string; value: string; mono?: boolean; highlight?: boolean }) {
   return (
-    <div className="bg-secondary/40 rounded-lg p-2.5">
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className={`mt-0.5 ${mono ? "font-mono" : ""} ${highlight ? "text-primary font-semibold" : "text-foreground"}`}>{value}</div>
+    <div className="bg-secondary/40 rounded-lg p-2 md:p-2.5">
+      <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-muted-foreground truncate">{label}</div>
+      <div className={`mt-0.5 text-xs md:text-sm break-words ${mono ? "font-mono" : ""} ${highlight ? "text-primary font-semibold" : "text-foreground"}`}>{value}</div>
     </div>
   );
 }
