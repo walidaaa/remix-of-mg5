@@ -181,6 +181,7 @@ function RecapRow({
   cout?: number;
   status: "ok" | "bientot" | "expiree" | null;
 }) {
+  const { t } = useLang();
   return (
     <TableRow>
       <TableCell className="font-medium">
@@ -195,12 +196,12 @@ function RecapRow({
       <TableCell className="whitespace-nowrap">{dateDebut ? new Date(dateDebut).toLocaleDateString("fr-FR") : "—"}</TableCell>
       <TableCell className="whitespace-nowrap">{dateFin ? new Date(dateFin).toLocaleDateString("fr-FR") : "—"}</TableCell>
       <TableCell className="font-mono">
-        {j === null ? "—" : j < 0 ? `-${Math.abs(j)} j` : `${j} j`}
+        {j === null ? "—" : j < 0 ? `-${Math.abs(j)} ${t("common.days")}` : `${j} ${t("common.days")}`}
       </TableCell>
       <TableCell className="text-right font-mono">{cout != null ? `${cout.toLocaleString("fr-FR")}` : "—"}</TableCell>
       <TableCell>
         {status === null ? (
-          <span className="text-xs text-muted-foreground">Non renseigné</span>
+          <span className="text-xs text-muted-foreground">{t("common.notSet")}</span>
         ) : (
           <span
             className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${
@@ -212,12 +213,28 @@ function RecapRow({
             }`}
           >
             {status === "ok" ? <CheckCircle2 size={12} /> : <AlertTriangle size={12} />}
-            {status === "expiree" ? "Expirée" : status === "bientot" ? "Bientôt" : "Valide"}
+            {status === "expiree" ? t("ins.status.expired") : status === "bientot" ? t("ins.status.soon") : t("ins.status.valid")}
           </span>
         )}
       </TableCell>
     </TableRow>
   );
+}
+
+function useDocLabels() {
+  const { t } = useLang();
+  return {
+    REF1_LABEL: {
+      assurance: t("ins.field.company"),
+      vignette: t("ins.field.agency"),
+      vehicle: t("ins.field.org"),
+    } as Record<DocKind, string>,
+    REF2_LABEL: {
+      assurance: t("ins.field.policyNo"),
+      vignette: t("ins.field.vignetteNo"),
+      vehicle: t("ins.field.regNo"),
+    } as Record<DocKind, string>,
+  };
 }
 
 type DocKind = "assurance" | "vignette" | "vehicle";
