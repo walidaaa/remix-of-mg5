@@ -10,6 +10,8 @@ import {
 } from "@/lib/storage";
 import { useState } from "react";
 import { Plus, Trash2, Wrench, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { useIsAdmin } from "@/lib/use-is-admin";
+import { AdminOverview } from "@/components/admin-overview";
 
 export const Route = createFileRoute("/entretien")({
   head: () => ({
@@ -23,6 +25,7 @@ export const Route = createFileRoute("/entretien")({
 
 function MaintenancePage() {
   const data = useAppData();
+  const { isAdmin, checked } = useIsAdmin();
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<MaintenanceType>("filtre-air");
   const [form, setForm] = useState({
@@ -53,6 +56,8 @@ function MaintenancePage() {
     });
     setOpen(false);
   };
+
+  if (checked && isAdmin) return <AdminOverview view="maintenance" />;
 
   return (
     <AppShell>

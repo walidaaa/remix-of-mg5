@@ -13,6 +13,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { useIsAdmin } from "@/lib/use-is-admin";
+import { AdminOverview } from "@/components/admin-overview";
 
 export const Route = createFileRoute("/vidanges")({
   head: () => ({
@@ -26,6 +28,7 @@ export const Route = createFileRoute("/vidanges")({
 
 function OilChangesPage() {
   const data = useAppData();
+  const { isAdmin, checked } = useIsAdmin();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     date: new Date().toISOString().slice(0, 10),
@@ -49,6 +52,8 @@ function OilChangesPage() {
     setOpen(false);
     setForm((f) => ({ ...f, filtreHuile: "", cout: "", notes: "" }));
   };
+
+  if (checked && isAdmin) return <AdminOverview view="oil" />;
 
   return (
     <AppShell>

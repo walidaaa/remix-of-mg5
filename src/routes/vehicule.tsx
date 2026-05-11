@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import { Save } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { listBrands, listModels } from "@/lib/admin.functions";
+import { useIsAdmin } from "@/lib/use-is-admin";
+import { AdminOverview } from "@/components/admin-overview";
 
 export const Route = createFileRoute("/vehicule")({
   head: () => ({
@@ -20,6 +22,7 @@ export const Route = createFileRoute("/vehicule")({
 function VehiclePage() {
   const data = useAppData();
   const nav = useNavigate();
+  const { isAdmin, checked } = useIsAdmin();
   const v = data.vehicle;
   const fetchBrands = useServerFn(listBrands);
   const fetchModels = useServerFn(listModels);
@@ -62,6 +65,8 @@ function VehiclePage() {
     await updateVehicle(form);
     nav({ to: "/" });
   };
+
+  if (checked && isAdmin) return <AdminOverview view="vehicles" />;
 
   return (
     <AppShell>

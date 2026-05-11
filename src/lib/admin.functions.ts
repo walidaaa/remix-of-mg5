@@ -285,6 +285,66 @@ export const adminGetUserData = createServerFn({ method: "POST" })
     };
   });
 
+// Admin: list ALL oil changes across all users
+export const adminListAllOilChanges = createServerFn({ method: "GET" })
+  .middleware([attachSupabaseAuth, requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await ensureAdmin(context.userId);
+    const [{ data: oils, error }, { data: profiles }, { data: vehicles }] = await Promise.all([
+      supabaseAdmin.from("oil_changes").select("*").order("date", { ascending: false }),
+      supabaseAdmin.from("profiles").select("id, username, display_name"),
+      supabaseAdmin.from("vehicles").select("user_id, marque, modele, matricule"),
+    ]);
+    if (error) throw new Error(error.message);
+    const profById = new Map((profiles ?? []).map((p) => [p.id, p]));
+    const vehByUser = new Map((vehicles ?? []).map((v) => [v.user_id, v]));
+    return (oils ?? []).map((o) => ({
+      ...o,
+      owner: profById.get(o.user_id) ?? null,
+      vehicle: vehByUser.get(o.user_id) ?? null,
+    }));
+  });
+
+// Admin: list ALL maintenance items
+export const adminListAllMaintenance = createServerFn({ method: "GET" })
+  .middleware([attachSupabaseAuth, requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await ensureAdmin(context.userId);
+    const [{ data: items, error }, { data: profiles }, { data: vehicles }] = await Promise.all([
+      supabaseAdmin.from("maintenance_items").select("*").order("date", { ascending: false }),
+      supabaseAdmin.from("profiles").select("id, username, display_name"),
+      supabaseAdmin.from("vehicles").select("user_id, marque, modele, matricule"),
+    ]);
+    if (error) throw new Error(error.message);
+    const profById = new Map((profiles ?? []).map((p) => [p.id, p]));
+    const vehByUser = new Map((vehicles ?? []).map((v) => [v.user_id, v]));
+    return (items ?? []).map((m) => ({
+      ...m,
+      owner: profById.get(m.user_id) ?? null,
+      vehicle: vehByUser.get(m.user_id) ?? null,
+    }));
+  });
+
+// Admin: list ALL insurance policies
+export const adminListAllInsurance = createServerFn({ method: "GET" })
+  .middleware([attachSupabaseAuth, requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await ensureAdmin(context.userId);
+    const [{ data: ins, error }, { data: profiles }, { data: vehicles }] = await Promise.all([
+      supabaseAdmin.from("insurance").select("*").order("date_fin", { ascending: true, nullsFirst: false }),
+      supabaseAdmin.from("profiles").select("id, username, display_name"),
+      supabaseAdmin.from("vehicles").select("user_id, marque, modele, matricule"),
+    ]);
+    if (error) throw new Error(error.message);
+    const profById = new Map((profiles ?? []).map((p) => [p.id, p]));
+    const vehByUser = new Map((vehicles ?? []).map((v) => [v.user_id, v]));
+    return (ins ?? []).map((i) => ({
+      ...i,
+      owner: profById.get(i.user_id) ?? null,
+      vehicle: vehByUser.get(i.user_id) ?? null,
+    }));
+  });
+
 // Brands
 export const listBrands = createServerFn({ method: "GET" })
   .middleware([attachSupabaseAuth, requireSupabaseAuth])

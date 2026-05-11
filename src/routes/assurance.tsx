@@ -4,6 +4,8 @@ import { useAppData } from "@/lib/use-app-data";
 import { updateInsurance, type Insurance } from "@/lib/storage";
 import { useState } from "react";
 import { ShieldCheck, AlertTriangle, CheckCircle2, Save } from "lucide-react";
+import { useIsAdmin } from "@/lib/use-is-admin";
+import { AdminOverview } from "@/components/admin-overview";
 
 export const Route = createFileRoute("/assurance")({
   head: () => ({
@@ -17,6 +19,7 @@ export const Route = createFileRoute("/assurance")({
 
 function InsurancePage() {
   const data = useAppData();
+  const { isAdmin, checked } = useIsAdmin();
   const ins = data.insurance;
   const [form, setForm] = useState<Insurance>(
     ins ?? {
@@ -39,6 +42,8 @@ function InsurancePage() {
       : joursRestants <= 30
       ? "bientot"
       : "ok";
+
+  if (checked && isAdmin) return <AdminOverview view="insurance" />;
 
   return (
     <AppShell>
