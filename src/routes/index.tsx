@@ -138,6 +138,7 @@ function Dashboard() {
           </>
         }
         cta={{ to: "/vidanges", label: "Gérer les vidanges" }}
+        resetEnabled={next.kmRestants !== null && next.kmRestants <= 0}
         onReset={async () => {
           const last = data.oilChanges[0];
           await addOilChange({
