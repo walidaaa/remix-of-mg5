@@ -41,6 +41,15 @@ export type Vignette = {
   scanUrl?: string;
 };
 
+export type VehicleDoc = {
+  organisme: string;
+  numero: string;
+  dateDebut: string;
+  dateFin: string;
+  cout?: number;
+  scanUrl?: string;
+};
+
 export type MaintenanceType =
   | "filtre-air"
   | "filtre-carburant"
