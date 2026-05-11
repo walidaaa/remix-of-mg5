@@ -65,8 +65,10 @@ function VehiclePage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     await updateVehicle(form);
-    nav({ to: "/" });
+    setEditing(false);
   };
+
+  const showForm = !v || editing;
 
   if (checked && isAdmin) return <AdminOverview view="vehicles" />;
 
