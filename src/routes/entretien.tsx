@@ -189,7 +189,7 @@ function MaintenancePage() {
             </label>
             <div className="flex gap-2 justify-end pt-2">
               <button type="button" onClick={() => setOpen(false)} className="px-4 py-2 rounded-lg bg-secondary">Annuler</button>
-              <button className="px-5 py-2 rounded-lg bg-primary text-primary-foreground font-semibold">Enregistrer</button>
+              <button disabled={saving} className="px-5 py-2 rounded-lg bg-primary text-primary-foreground font-semibold disabled:opacity-50">{saving ? "Enregistrement…" : "Enregistrer"}</button>
             </div>
             <style>{`.input{width:100%;background:var(--color-input);border:1px solid var(--color-border);border-radius:.5rem;padding:.6rem .9rem;color:var(--color-foreground);outline:none}.input:focus{border-color:var(--color-ring)}`}</style>
           </form>
