@@ -43,6 +43,8 @@ function InsurancePage() {
       ? "bientot"
       : "ok";
 
+  if (checked && isAdmin) return <AdminOverview view="insurance" />;
+
   return (
     <AppShell>
       <h1 className="text-3xl mb-2">Assurance</h1>
