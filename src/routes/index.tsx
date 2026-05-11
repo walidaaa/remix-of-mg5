@@ -118,6 +118,16 @@ function Dashboard() {
           </>
         }
         cta={{ to: "/vidanges", label: "Gérer les vidanges" }}
+        onReset={async () => {
+          const last = data.oilChanges[0];
+          await addOilChange({
+            date: new Date().toISOString(),
+            km: v.kmActuel,
+            typeHuile: last?.typeHuile || "5W-30",
+            filtreHuile: last?.filtreHuile || "",
+          });
+          toast.success("Vidange enregistrée");
+        }}
       />
 
       {/* Alertes entretien */}
