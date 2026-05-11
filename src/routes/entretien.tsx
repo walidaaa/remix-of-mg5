@@ -159,8 +159,13 @@ function MaintenancePage() {
                 <input type="date" required value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="input" />
               </label>
               <label className="block">
-                <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Kilométrage</div>
-                <input type="number" required value={form.km} onChange={(e) => setForm({ ...form, km: Number(e.target.value) })} className="input" />
+                <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Kilométrage actuel (verrouillé)</div>
+                <input
+                  type="text"
+                  readOnly
+                  value={`${(data.vehicle?.kmActuel ?? 0).toLocaleString("fr-FR")} km`}
+                  className="input opacity-80 cursor-not-allowed font-mono"
+                />
               </label>
               <label className="block">
                 <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Intervalle (km)</div>
@@ -171,8 +176,11 @@ function MaintenancePage() {
                 <input type="number" value={form.intervalleMois} onChange={(e) => setForm({ ...form, intervalleMois: Number(e.target.value) })} className="input" />
               </label>
             </div>
+            <p className="text-xs text-muted-foreground -mt-2">
+              Le kilométrage est repris automatiquement du véhicule. Mettez-le à jour depuis le Tableau ou la page Véhicule.
+            </p>
             <label className="block">
-              <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Coût (DH)</div>
+              <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Coût (DA)</div>
               <input type="number" value={form.cout} onChange={(e) => setForm({ ...form, cout: e.target.value })} className="input" />
             </label>
             <label className="block">
