@@ -90,17 +90,17 @@ function Dashboard() {
             alt={`${v.marque} ${v.modele}`}
             className="absolute inset-0 w-full h-full object-cover object-center"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-background/10" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
           <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-8">
-            <div className="text-xs uppercase tracking-widest text-primary font-semibold">
+            <div className="text-xs uppercase tracking-widest text-white/90 font-semibold drop-shadow">
               {v.marque} · {v.annee}
             </div>
-            <h1 className="text-4xl md:text-6xl mt-1 leading-none">{v.modele}</h1>
+            <h1 className="text-4xl md:text-6xl mt-1 leading-none text-white drop-shadow-lg">{v.modele}</h1>
             <div className="flex items-center gap-3 mt-3 text-sm flex-wrap">
-              <span className="font-mono bg-card/80 backdrop-blur px-3 py-1 rounded-md border border-border">{v.matricule}</span>
-              <span className="flex items-center gap-1 text-muted-foreground"><Settings2 size={14} /> {v.transmission}</span>
-              <span className="flex items-center gap-1 text-muted-foreground"><Palette size={14} /> {v.couleur}</span>
+              <span className="font-mono bg-black/50 backdrop-blur px-3 py-1 rounded-md border border-white/20 text-white">{v.matricule}</span>
+              <span className="flex items-center gap-1 text-white/90"><Settings2 size={14} /> {v.transmission}</span>
+              <span className="flex items-center gap-1 text-white/90"><Palette size={14} /> {v.couleur}</span>
             </div>
           </div>
         </div>
