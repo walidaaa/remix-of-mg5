@@ -28,6 +28,7 @@ export const Route = createFileRoute("/vidanges")({
 
 function OilChangesPage() {
   const data = useAppData();
+  const { isAdmin, checked } = useIsAdmin();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     date: new Date().toISOString().slice(0, 10),
