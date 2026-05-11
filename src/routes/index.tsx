@@ -179,8 +179,8 @@ function Dashboard() {
       )}
 
       {/* Quick update km */}
-      <div className="rounded-2xl gradient-card p-6 mb-6 shadow-card">
-        <h3 className="text-lg mb-3 flex items-center gap-2"><Gauge size={20} className="text-accent" /> Mise à jour du kilométrage</h3>
+      <div className="rounded-2xl gradient-card p-4 md:p-6 mb-6 shadow-card">
+        <h3 className="text-base md:text-lg mb-3 flex items-center gap-2"><Gauge size={18} className="text-accent" /> Mise à jour du kilométrage</h3>
         <form
           className="flex gap-2"
           onSubmit={(e) => {
@@ -198,9 +198,9 @@ function Dashboard() {
             placeholder={`≥ ${v.kmActuel.toLocaleString("fr-FR")}`}
             value={km}
             onChange={(e) => setKm(e.target.value)}
-            className="flex-1 bg-input border border-border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-ring"
+            className="flex-1 min-w-0 bg-input border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
-          <button className="bg-primary text-primary-foreground px-5 rounded-lg font-semibold hover:opacity-90">
+          <button className="bg-primary text-primary-foreground px-4 py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 whitespace-nowrap shrink-0">
             Mettre à jour
           </button>
         </form>

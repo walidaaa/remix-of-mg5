@@ -54,20 +54,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen pb-24 md:pb-0 md:pl-64 pt-14 md:pt-0">
       {/* Mobile top bar */}
-      <header className="md:hidden fixed top-0 inset-x-0 z-40 h-14 bg-card/95 backdrop-blur border-b border-border flex items-center justify-between px-4">
-        <div className="flex items-baseline gap-2">
-          <span className="font-display text-xl text-primary leading-none">{brandLabel}</span>
-          <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Maintenance</span>
+      <header className="md:hidden fixed top-0 inset-x-0 z-40 h-14 bg-card/95 backdrop-blur border-b border-border flex items-center justify-between px-3 gap-2">
+        <div className="flex items-baseline gap-1.5 min-w-0 flex-1">
+          <span className="font-display text-base text-primary leading-none truncate">{brandLabel}</span>
+          <span className="text-[9px] text-muted-foreground uppercase tracking-widest hidden xs:inline">Maintenance</span>
         </div>
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-center gap-1.5 shrink-0">
           <ThemeToggle />
           <LangToggle />
           <button
             onClick={() => signOut()}
             aria-label={t("auth.logout")}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-secondary text-foreground hover:bg-secondary/80 text-xs font-medium"
+            className="inline-flex items-center justify-center h-9 w-9 rounded-md bg-secondary text-foreground hover:bg-secondary/80"
           >
-            <LogOut size={14} /> <span>{t("auth.signOut")}</span>
+            <LogOut size={14} />
           </button>
         </div>
       </header>
