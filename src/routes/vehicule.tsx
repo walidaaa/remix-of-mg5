@@ -3,7 +3,7 @@ import { AppShell } from "@/components/app-shell";
 import { useAppData } from "@/lib/use-app-data";
 import { updateVehicle, type Vehicle, MAINTENANCE_LABELS, type MaintenanceType } from "@/lib/storage";
 import { useEffect, useMemo, useState } from "react";
-import { Save, FileText, X, Car, Droplet, Wrench, ShieldCheck, Gauge, Calendar, Coins } from "lucide-react";
+import { Save, FileText, X, Car, Droplet, Wrench, ShieldCheck, Gauge, Calendar, Coins, Pencil } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { listBrands, listModels } from "@/lib/admin.functions";
 import { useIsAdmin } from "@/lib/use-is-admin";
