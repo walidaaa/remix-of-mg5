@@ -86,9 +86,12 @@ function AdminPage() {
       </div>
       <p className="text-muted-foreground mb-6">Gérez les utilisateurs et les marques de véhicules.</p>
 
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2 mb-6 flex-wrap">
         <TabBtn active={tab === "users"} onClick={() => setTab("users")} icon={<Users size={16} />}>
           Utilisateurs
+        </TabBtn>
+        <TabBtn active={tab === "vehicles"} onClick={() => setTab("vehicles")} icon={<Database size={16} />}>
+          Tous les véhicules
         </TabBtn>
         <TabBtn active={tab === "brands"} onClick={() => setTab("brands")} icon={<Tag size={16} />}>
           Marques
@@ -98,7 +101,7 @@ function AdminPage() {
         </TabBtn>
       </div>
 
-      {tab === "users" ? <UsersTab /> : tab === "brands" ? <BrandsTab /> : <ModelsTab />}
+      {tab === "users" ? <UsersTab /> : tab === "vehicles" ? <VehiclesTab /> : tab === "brands" ? <BrandsTab /> : <ModelsTab />}
     </AppShell>
   );
 }
