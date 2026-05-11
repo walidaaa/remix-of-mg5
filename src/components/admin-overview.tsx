@@ -235,14 +235,14 @@ function Stat({ icon: Icon, label, value, tone }: { icon: any; label: string; va
   );
 }
 
-function VehicleCard({ v }: { v: any }) {
+function VehicleCard({ v, onView }: { v: any; onView?: () => void }) {
   return (
-    <div className="rounded-2xl overflow-hidden gradient-card shadow-card border border-border">
+    <div className="rounded-2xl overflow-hidden gradient-card shadow-card border border-border flex flex-col">
       <div className="relative h-32">
-        <img src={getBrandImage(v.marque)} alt={v.marque} className="w-full h-full object-cover" />
+        <img src={getBrandImage(v.marque)} alt={v.marque} className="w-full h-full object-cover" loading="lazy" />
         <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent" />
       </div>
-      <div className="p-4">
+      <div className="p-4 flex-1 flex flex-col">
         <div className="text-xs uppercase tracking-wider text-primary font-semibold">{v.marque} · {v.annee}</div>
         <div className="font-display text-2xl">{v.modele}</div>
         <div className="flex items-center gap-2 mt-2 flex-wrap">
@@ -259,13 +259,22 @@ function VehicleCard({ v }: { v: any }) {
             <div className="font-semibold">{v.oil_count}</div>
           </div>
         </div>
+        {onView && (
+          <button
+            onClick={onView}
+            className="mt-3 inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-3 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition"
+          >
+            <Eye size={15} /> Voir toutes les données
+          </button>
+        )}
       </div>
     </div>
   );
 }
 
-function Vehicles({ vehicles }: any) {
+function Vehicles({ vehicles, oils, maint, ins }: any) {
   const [q, setQ] = useState("");
+  const [selected, setSelected] = useState<any | null>(null);
   const filtered = useFilter<any>(vehicles, q, (v) => [
     v.marque, v.modele, v.matricule, v.couleur, v.annee, v.transmission,
     v.owner?.username, v.owner?.display_name,
@@ -276,11 +285,163 @@ function Vehicles({ vehicles }: any) {
       <Header icon={Car} title="Tous les véhicules" subtitle="Tous les véhicules de tous les utilisateurs" count={vehicles.length} />
       <SearchBar value={q} onChange={setQ} placeholder="Rechercher par marque, modèle, matricule, propriétaire…" />
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {p.pageItems.map((v: any) => <VehicleCard key={v.user_id} v={v} />)}
+        {p.pageItems.map((v: any) => (
+          <VehicleCard key={v.user_id} v={v} onView={() => setSelected(v)} />
+        ))}
         {filtered.length === 0 && <p className="text-muted-foreground">Aucun véhicule.</p>}
       </div>
       <PaginationBar {...p} count={p.pageItems.length} />
+      {selected && (
+        <VehicleDetailModal
+          vehicle={selected}
+          oils={oils.filter((o: any) => o.user_id === selected.user_id)}
+          maint={maint.filter((m: any) => m.user_id === selected.user_id)}
+          insurance={ins.find((i: any) => i.user_id === selected.user_id) || null}
+          onClose={() => setSelected(null)}
+        />
+      )}
     </AppShell>
+  );
+}
+
+function VehicleDetailModal({ vehicle, oils, maint, insurance, onClose }: {
+  vehicle: any; oils: any[]; maint: any[]; insurance: any | null; onClose: () => void;
+}) {
+  const totalOil = oils.reduce((s, o) => s + (Number(o.cout) || 0), 0);
+  const totalMaint = maint.reduce((s, m) => s + (Number(m.cout) || 0), 0);
+  const total = totalOil + totalMaint;
+  const insDays = insurance?.date_fin ? Math.ceil((+new Date(insurance.date_fin) - Date.now()) / 86400000) : null;
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-start md:items-center justify-center p-3 md:p-6 overflow-y-auto" onClick={onClose}>
+      <div className="bg-background border border-border rounded-2xl shadow-card w-full max-w-4xl my-4" onClick={(e) => e.stopPropagation()}>
+        <div className="relative">
+          <img src={getBrandImage(vehicle.marque)} alt={vehicle.marque} className="w-full h-40 object-cover rounded-t-2xl" loading="lazy" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent rounded-t-2xl" />
+          <button onClick={onClose} className="absolute top-3 right-3 p-2 rounded-lg bg-background/80 hover:bg-background border border-border" aria-label="Fermer">
+            <X size={18} />
+          </button>
+          <div className="absolute bottom-3 left-5">
+            <div className="text-xs uppercase tracking-wider text-primary font-bold">{vehicle.marque} · {vehicle.annee}</div>
+            <div className="font-display text-3xl">{vehicle.modele}</div>
+            <div className="mt-1 flex items-center gap-2 flex-wrap">
+              <span className="font-mono text-xs bg-secondary px-2 py-0.5 rounded">{vehicle.matricule || "—"}</span>
+              <OwnerBadge owner={vehicle.owner} />
+            </div>
+          </div>
+        </div>
+
+        <div className="p-5 grid gap-5">
+          <DetailSection icon={Car} title="Informations véhicule" tone="primary">
+            <DetailGrid>
+              <DetailInfo label="Matricule" value={vehicle.matricule || "—"} mono />
+              <DetailInfo label="Marque" value={vehicle.marque} />
+              <DetailInfo label="Modèle" value={vehicle.modele} />
+              <DetailInfo label="Année" value={String(vehicle.annee)} />
+              <DetailInfo label="Couleur" value={vehicle.couleur || "—"} />
+              <DetailInfo label="Transmission" value={vehicle.transmission} />
+              <DetailInfo label="Km actuel" value={(vehicle.km_actuel || 0).toLocaleString("fr-FR") + " km"} />
+              <DetailInfo label="Intervalle vidange" value={(vehicle.intervalle_vidange || 0).toLocaleString("fr-FR") + " km"} />
+            </DetailGrid>
+          </DetailSection>
+
+          <DetailSection icon={Coins} title="Coûts cumulés" tone="success">
+            <DetailGrid>
+              <DetailInfo label="Vidanges" value={`${totalOil.toLocaleString("fr-FR")} DH`} />
+              <DetailInfo label="Entretiens" value={`${totalMaint.toLocaleString("fr-FR")} DH`} />
+              <DetailInfo label="Total" value={`${total.toLocaleString("fr-FR")} DH`} highlight />
+            </DetailGrid>
+          </DetailSection>
+
+          <DetailSection
+            icon={ShieldCheck}
+            title="Assurance"
+            tone={insDays === null ? "muted" : insDays < 0 ? "destructive" : insDays <= 30 ? "warning" : "success"}
+          >
+            {insurance ? (
+              <DetailGrid>
+                <DetailInfo label="Compagnie" value={insurance.compagnie || "—"} />
+                <DetailInfo label="N° police" value={insurance.numero_police || "—"} mono />
+                <DetailInfo label="Du" value={insurance.date_debut ? new Date(insurance.date_debut).toLocaleDateString("fr-FR") : "—"} />
+                <DetailInfo label="Au" value={insurance.date_fin ? new Date(insurance.date_fin).toLocaleDateString("fr-FR") : "—"} />
+                {insDays !== null && (
+                  <DetailInfo label="Statut" value={insDays < 0 ? `Expirée ${Math.abs(insDays)}j` : `${insDays} j restants`} highlight />
+                )}
+              </DetailGrid>
+            ) : <p className="text-sm text-muted-foreground">Aucune assurance enregistrée.</p>}
+          </DetailSection>
+
+          <DetailSection icon={Droplet} title={`Vidanges (${oils.length})`} tone="primary">
+            {oils.length ? (
+              <div className="grid gap-2">
+                {oils.map((o) => (
+                  <div key={o.id} className="rounded-lg bg-secondary/40 p-3 text-sm flex items-center justify-between gap-3 flex-wrap">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Calendar size={11} />{new Date(o.date).toLocaleDateString("fr-FR")}</span>
+                      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Gauge size={11} />{o.km.toLocaleString("fr-FR")} km</span>
+                      <span className="px-2 py-0.5 rounded bg-primary/15 text-primary text-xs">{o.type_huile}</span>
+                      {o.filtre_huile && <span className="text-xs text-muted-foreground">Filtre: {o.filtre_huile}</span>}
+                    </div>
+                    <span className="font-mono text-sm">{o.cout != null ? `${o.cout} DH` : "—"}</span>
+                  </div>
+                ))}
+              </div>
+            ) : <p className="text-sm text-muted-foreground">Aucune vidange.</p>}
+          </DetailSection>
+
+          <DetailSection icon={Wrench} title={`Entretiens (${maint.length})`} tone="warning">
+            {maint.length ? (
+              <div className="grid gap-2">
+                {maint.map((m) => {
+                  const def = MAINTENANCE_LABELS[m.type as MaintenanceType];
+                  return (
+                    <div key={m.id} className="rounded-lg bg-secondary/40 p-3 text-sm flex items-center justify-between gap-3 flex-wrap">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <span className="font-semibold">{def?.label ?? m.type}</span>
+                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Calendar size={11} />{new Date(m.date).toLocaleDateString("fr-FR")}</span>
+                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Gauge size={11} />{m.km.toLocaleString("fr-FR")} km</span>
+                      </div>
+                      <span className="font-mono text-sm">{m.cout != null ? `${m.cout} DH` : "—"}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : <p className="text-sm text-muted-foreground">Aucun entretien.</p>}
+          </DetailSection>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DetailSection({ icon: Icon, title, tone, children }: { icon: any; title: string; tone: string; children: React.ReactNode }) {
+  const map: Record<string, string> = {
+    primary: "border-primary/30 text-primary",
+    success: "border-success/30 text-success",
+    warning: "border-warning/30 text-warning",
+    destructive: "border-destructive/30 text-destructive",
+    muted: "border-border text-muted-foreground",
+  };
+  return (
+    <div className={`rounded-xl gradient-card border ${map[tone]} p-4 shadow-card`}>
+      <div className="flex items-center gap-2 text-xs uppercase tracking-wider font-semibold mb-3">
+        <Icon size={14} /> {title}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function DetailGrid({ children }: { children: React.ReactNode }) {
+  return <div className="grid grid-cols-2 md:grid-cols-4 gap-3">{children}</div>;
+}
+
+function DetailInfo({ label, value, mono, highlight }: { label: string; value: string; mono?: boolean; highlight?: boolean }) {
+  return (
+    <div className="bg-secondary/40 rounded-lg p-2.5">
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className={`mt-0.5 ${mono ? "font-mono" : ""} ${highlight ? "text-primary font-semibold" : "text-foreground"}`}>{value}</div>
+    </div>
   );
 }
 
