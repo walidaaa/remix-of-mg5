@@ -67,7 +67,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <aside className="hidden md:flex fixed left-0 top-0 h-screen w-64 flex-col border-r border-border bg-card/50 backdrop-blur p-6 gap-2">
         <div className="mb-6 flex items-start justify-between gap-2">
           <div>
-            <div className="font-display text-3xl text-primary">MG5</div>
+            <div className="font-display text-3xl text-primary">{brandLabel}</div>
             <div className="text-xs text-muted-foreground uppercase tracking-widest">Maintenance</div>
           </div>
           <LangToggle />
