@@ -3,13 +3,15 @@ import { AppShell } from "@/components/app-shell";
 import { useAppData } from "@/lib/use-app-data";
 import { getNextOilChange, getMaintenanceStatus, MAINTENANCE_LABELS, updateKm, addOilChange } from "@/lib/storage";
 import { toast } from "sonner";
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, Camera, Pencil, Loader2, X, Check } from "lucide-react";
 import { Car, Droplet, AlertTriangle, CheckCircle2, Gauge, Settings2, Palette, Wrench, ShieldCheck, Calendar, ArrowRight } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { getBrandImage } from "@/lib/brand-images";
 import { useIsAdmin } from "@/lib/use-is-admin";
 import { AdminOverview } from "@/components/admin-overview";
 import { useLang } from "@/lib/i18n";
+import { useServerFn } from "@tanstack/react-start";
+import { scanOdometer } from "@/lib/odometer.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
