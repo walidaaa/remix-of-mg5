@@ -261,3 +261,191 @@ function Stat({ label, value, icon: Icon }: { label: string; value: string; icon
     </div>
   );
 }
+
+function KmUpdateCard({ currentKm, t }: { currentKm: number; t: (k: any) => string }) {
+  const [mode, setMode] = useState<"manual" | "scan">("manual");
+  const [km, setKm] = useState("");
+  const [photo, setPhoto] = useState<string | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const [detected, setDetected] = useState<number | null>(null);
+  const [confirmKm, setConfirmKm] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
+  const galleryRef = useRef<HTMLInputElement>(null);
+  const scan = useServerFn(scanOdometer);
+
+  const submitManual = (e: React.FormEvent) => {
+    e.preventDefault();
+    const n = parseInt(km, 10);
+    if (isNaN(n)) return;
+    if (n < currentKm) { toast.error(t("dash.km.tooLow")); return; }
+    updateKm(n);
+    setKm("");
+    toast.success(t("common.update"));
+  };
+
+  const handleFile = async (file: File) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const dataUrl = String(reader.result || "");
+      setPhoto(dataUrl);
+      setDetected(null);
+      setConfirmKm("");
+      setScanning(true);
+      try {
+        const res = await scan({ data: { imageDataUrl: dataUrl } });
+        if (res.km && res.km > 0) {
+          setDetected(res.km);
+          setConfirmKm(String(res.km));
+        } else {
+          toast.error(t("dash.km.scanFailed"));
+        }
+      } catch (e: any) {
+        toast.error(e?.message || t("dash.km.scanFailed"));
+      } finally {
+        setScanning(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const reset = () => { setPhoto(null); setDetected(null); setConfirmKm(""); };
+
+  const confirm = () => {
+    const n = parseInt(confirmKm, 10);
+    if (isNaN(n)) return;
+    if (n < currentKm) { toast.error(t("dash.km.tooLow")); return; }
+    updateKm(n);
+    toast.success(t("common.update"));
+    reset();
+  };
+
+  return (
+    <div className="rounded-2xl gradient-card p-4 md:p-6 mb-6 shadow-card">
+      <h3 className="text-base md:text-lg mb-3 flex items-center gap-2">
+        <Gauge size={18} className="text-accent" /> {t("dash.kmUpdate")}
+      </h3>
+
+      <div className="inline-flex p-1 mb-4 bg-input rounded-lg border border-border">
+        <button
+          type="button"
+          onClick={() => setMode("manual")}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs md:text-sm font-medium transition ${mode === "manual" ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"}`}
+        >
+          <Pencil size={14} /> {t("dash.km.manual")}
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode("scan")}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs md:text-sm font-medium transition ${mode === "scan" ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"}`}
+        >
+          <Camera size={14} /> {t("dash.km.scan")}
+        </button>
+      </div>
+
+      {mode === "manual" ? (
+        <form className="flex gap-2" onSubmit={submitManual}>
+          <input
+            type="number"
+            inputMode="numeric"
+            placeholder={`≥ ${currentKm.toLocaleString("fr-FR")}`}
+            value={km}
+            onChange={(e) => setKm(e.target.value)}
+            className="flex-1 min-w-0 bg-input border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+          <button className="bg-primary text-primary-foreground px-4 py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 whitespace-nowrap shrink-0">
+            {t("common.update")}
+          </button>
+        </form>
+      ) : (
+        <div>
+          <p className="text-xs text-muted-foreground mb-3">{t("dash.km.scanHint")}</p>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
+          />
+          <input
+            ref={galleryRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
+          />
+
+          {!photo && (
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-lg text-sm font-semibold hover:opacity-90"
+              >
+                <Camera size={16} /> {t("dash.km.takePhoto")}
+              </button>
+              <button
+                type="button"
+                onClick={() => galleryRef.current?.click()}
+                className="flex items-center gap-2 bg-input border border-border px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-card"
+              >
+                {t("dash.km.choosePhoto")}
+              </button>
+            </div>
+          )}
+
+          {photo && (
+            <div className="space-y-3">
+              <div className="relative rounded-xl overflow-hidden border border-border bg-black">
+                <img src={photo} alt="odometer" className="w-full max-h-64 object-contain" />
+                {scanning && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/60 text-white text-sm gap-2">
+                    <Loader2 size={18} className="animate-spin" /> {t("dash.km.scanning")}
+                  </div>
+                )}
+              </div>
+
+              {!scanning && detected !== null && (
+                <div className="rounded-xl border border-success/40 bg-success/10 p-3">
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground">{t("dash.km.detected")}</div>
+                  <div className="mt-1 flex items-center gap-2">
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      value={confirmKm}
+                      onChange={(e) => setConfirmKm(e.target.value)}
+                      className="flex-1 min-w-0 bg-input border border-border rounded-lg px-3 py-2 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                    <span className="text-xs text-muted-foreground">{t("common.km")}</span>
+                  </div>
+                  <div className="text-[11px] text-muted-foreground mt-1">{t("dash.km.editDetected")}</div>
+                </div>
+              )}
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={reset}
+                  disabled={scanning}
+                  className="flex items-center gap-1.5 bg-input border border-border px-3 py-2 rounded-lg text-sm font-medium hover:bg-card disabled:opacity-40"
+                >
+                  <X size={14} /> {t("dash.km.retake")}
+                </button>
+                {detected !== null && !scanning && (
+                  <button
+                    type="button"
+                    onClick={confirm}
+                    className="flex items-center gap-1.5 bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90"
+                  >
+                    <Check size={14} /> {t("dash.km.confirm")}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
