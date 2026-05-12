@@ -178,32 +178,8 @@ function Dashboard() {
         </div>
       )}
 
-      <div className="rounded-2xl gradient-card p-4 md:p-6 mb-6 shadow-card">
-        <h3 className="text-base md:text-lg mb-3 flex items-center gap-2"><Gauge size={18} className="text-accent" /> {t("dash.kmUpdate")}</h3>
-        <form
-          className="flex gap-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            const n = parseInt(km, 10);
-            if (!isNaN(n) && n >= v.kmActuel) {
-              updateKm(n);
-              setKm("");
-            }
-          }}
-        >
-          <input
-            type="number"
-            inputMode="numeric"
-            placeholder={`≥ ${v.kmActuel.toLocaleString("fr-FR")}`}
-            value={km}
-            onChange={(e) => setKm(e.target.value)}
-            className="flex-1 min-w-0 bg-input border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-          />
-          <button className="bg-primary text-primary-foreground px-4 py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 whitespace-nowrap shrink-0">
-            {t("common.update")}
-          </button>
-        </form>
-      </div>
+      <KmUpdateCard currentKm={v.kmActuel} t={t} />
+
 
       <div className="rounded-2xl gradient-card p-6 shadow-card">
         <h3 className="text-lg mb-4 flex items-center gap-2"><Droplet size={20} className="text-accent" /> {t("dash.lastOil")}</h3>
