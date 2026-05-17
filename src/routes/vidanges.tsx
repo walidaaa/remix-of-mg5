@@ -255,6 +255,21 @@ function OilChangesPage() {
             className="bg-card w-full md:max-w-lg rounded-t-2xl md:rounded-2xl p-6 shadow-card grid gap-4"
           >
             <h2 className="text-2xl">{t("common.edit")}</h2>
+            <Row label={t("oil.col.date")}>
+              <input type="date" required value={editForm.date} onChange={(e) => setEditForm({ ...editForm, date: e.target.value })} className="input" />
+            </Row>
+            <Row label={t("oil.col.km")}>
+              <input type="number" required value={editForm.km} onChange={(e) => setEditForm({ ...editForm, km: Number(e.target.value) })} className="input" />
+            </Row>
+            <Row label={t("oil.oilType")}>
+              <input list="oils-edit" required value={editForm.typeHuile} onChange={(e) => setEditForm({ ...editForm, typeHuile: e.target.value })} className="input" />
+              <datalist id="oils-edit">
+                <option value="5W-30" />
+                <option value="5W-40" />
+                <option value="10W-40" />
+                <option value="0W-20" />
+              </datalist>
+            </Row>
             <Row label={t("oil.filterLabel")}>
               <input value={editForm.filtreHuile} onChange={(e) => setEditForm({ ...editForm, filtreHuile: e.target.value })} placeholder="Ex: Mann W 712/52" className="input" />
             </Row>
