@@ -175,7 +175,7 @@ const DICT = {
     "ins.col.status": "Statut",
     "ins.assurance": "Assurance",
     "ins.vignette": "Vignette",
-    "ins.carte": "Carte grise",
+    "ins.carte": "Scanner",
     "ins.policy": "Police d'assurance",
     "ins.vignetteAuto": "Scanner Véhicule",
     "ins.cartePermis": "Scanner Véhicule",
