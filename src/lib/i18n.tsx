@@ -387,7 +387,7 @@ const DICT = {
     "ins.col.status": "الحالة",
     "ins.assurance": "التأمين",
     "ins.vignette": "الفينيات",
-    "ins.carte": "البطاقة الرمادية",
+    "ins.carte": "مسح",
     "ins.policy": "عقد التأمين",
     "ins.vignetteAuto": "مسح المركبة",
     "ins.cartePermis": "مسح المركبة",
