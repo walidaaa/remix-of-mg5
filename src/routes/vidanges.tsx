@@ -44,6 +44,9 @@ function OilChangesPage() {
   });
   const [editForm, setEditForm] = useState({
     id: "",
+    date: "",
+    km: 0,
+    typeHuile: "",
     filtreHuile: "",
     cout: "",
     notes: "",
@@ -76,15 +79,14 @@ function OilChangesPage() {
     try {
       await updateOilChange({
         id: editForm.id,
-        date: "",
-        km: 0,
-        typeHuile: "",
+        date: new Date(editForm.date).toISOString(),
+        km: Number(editForm.km),
+        typeHuile: editForm.typeHuile,
         filtreHuile: editForm.filtreHuile,
         cout: editForm.cout ? Number(editForm.cout) : undefined,
         notes: editForm.notes || undefined,
       });
       setEditOpen(false);
-      setEditForm({ id: "", filtreHuile: "", cout: "", notes: "" });
     } finally {
       setSaving(false);
     }
@@ -93,6 +95,9 @@ function OilChangesPage() {
   const startEdit = (o: typeof data.oilChanges[0]) => {
     setEditForm({
       id: o.id,
+      date: o.date.slice(0, 10),
+      km: o.km,
+      typeHuile: o.typeHuile,
       filtreHuile: o.filtreHuile || "",
       cout: o.cout != null ? String(o.cout) : "",
       notes: o.notes || "",
