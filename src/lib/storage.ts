@@ -257,12 +257,16 @@ export async function updateOilChange(o: OilChange) {
   await supabase
     .from("oil_changes")
     .update({
+      date: o.date,
+      km: o.km,
+      type_huile: o.typeHuile,
       filtre_huile: o.filtreHuile || null,
       cout: o.cout ?? null,
       notes: o.notes ?? null,
     })
     .eq("id", o.id)
     .eq("user_id", userId);
+  await bumpKm(o.km);
   ping();
 }
 

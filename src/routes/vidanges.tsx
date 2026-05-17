@@ -44,6 +44,9 @@ function OilChangesPage() {
   });
   const [editForm, setEditForm] = useState({
     id: "",
+    date: "",
+    km: 0,
+    typeHuile: "",
     filtreHuile: "",
     cout: "",
     notes: "",
@@ -76,15 +79,14 @@ function OilChangesPage() {
     try {
       await updateOilChange({
         id: editForm.id,
-        date: "",
-        km: 0,
-        typeHuile: "",
+        date: new Date(editForm.date).toISOString(),
+        km: Number(editForm.km),
+        typeHuile: editForm.typeHuile,
         filtreHuile: editForm.filtreHuile,
         cout: editForm.cout ? Number(editForm.cout) : undefined,
         notes: editForm.notes || undefined,
       });
       setEditOpen(false);
-      setEditForm({ id: "", filtreHuile: "", cout: "", notes: "" });
     } finally {
       setSaving(false);
     }
@@ -93,6 +95,9 @@ function OilChangesPage() {
   const startEdit = (o: typeof data.oilChanges[0]) => {
     setEditForm({
       id: o.id,
+      date: o.date.slice(0, 10),
+      km: o.km,
+      typeHuile: o.typeHuile,
       filtreHuile: o.filtreHuile || "",
       cout: o.cout != null ? String(o.cout) : "",
       notes: o.notes || "",
@@ -250,6 +255,21 @@ function OilChangesPage() {
             className="bg-card w-full md:max-w-lg rounded-t-2xl md:rounded-2xl p-6 shadow-card grid gap-4"
           >
             <h2 className="text-2xl">{t("common.edit")}</h2>
+            <Row label={t("oil.col.date")}>
+              <input type="date" required value={editForm.date} onChange={(e) => setEditForm({ ...editForm, date: e.target.value })} className="input" />
+            </Row>
+            <Row label={t("oil.col.km")}>
+              <input type="number" required value={editForm.km} onChange={(e) => setEditForm({ ...editForm, km: Number(e.target.value) })} className="input" />
+            </Row>
+            <Row label={t("oil.oilType")}>
+              <input list="oils-edit" required value={editForm.typeHuile} onChange={(e) => setEditForm({ ...editForm, typeHuile: e.target.value })} className="input" />
+              <datalist id="oils-edit">
+                <option value="5W-30" />
+                <option value="5W-40" />
+                <option value="10W-40" />
+                <option value="0W-20" />
+              </datalist>
+            </Row>
             <Row label={t("oil.filterLabel")}>
               <input value={editForm.filtreHuile} onChange={(e) => setEditForm({ ...editForm, filtreHuile: e.target.value })} placeholder="Ex: Mann W 712/52" className="input" />
             </Row>
