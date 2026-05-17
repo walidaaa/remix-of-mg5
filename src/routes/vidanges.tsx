@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { useAppData } from "@/lib/use-app-data";
-import { addOilChange, deleteOilChange } from "@/lib/storage";
+import { addOilChange, deleteOilChange, updateOilChange } from "@/lib/storage";
 import { useState } from "react";
-import { Plus, Trash2, Droplet } from "lucide-react";
+import { Plus, Trash2, Droplet, Pencil } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -32,11 +32,18 @@ function OilChangesPage() {
   const { isAdmin, checked } = useIsAdmin();
   const { t } = useLang();
   const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     date: new Date().toISOString().slice(0, 10),
     km: data.vehicle?.kmActuel ?? 0,
     typeHuile: "5W-30",
+    filtreHuile: "",
+    cout: "",
+    notes: "",
+  });
+  const [editForm, setEditForm] = useState({
+    id: "",
     filtreHuile: "",
     cout: "",
     notes: "",
@@ -60,6 +67,37 @@ function OilChangesPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const submitEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (saving || !editForm.id) return;
+    setSaving(true);
+    try {
+      await updateOilChange({
+        id: editForm.id,
+        date: "",
+        km: 0,
+        typeHuile: "",
+        filtreHuile: editForm.filtreHuile,
+        cout: editForm.cout ? Number(editForm.cout) : undefined,
+        notes: editForm.notes || undefined,
+      });
+      setEditOpen(false);
+      setEditForm({ id: "", filtreHuile: "", cout: "", notes: "" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const startEdit = (o: typeof data.oilChanges[0]) => {
+    setEditForm({
+      id: o.id,
+      filtreHuile: o.filtreHuile || "",
+      cout: o.cout != null ? String(o.cout) : "",
+      notes: o.notes || "",
+    });
+    setEditOpen(true);
   };
 
   if (checked && isAdmin) return <AdminOverview view="oil" />;
@@ -104,7 +142,7 @@ function OilChangesPage() {
                 <TableHead>{t("oil.col.filter")}</TableHead>
                 <TableHead className="text-right">{t("oil.col.cost")}</TableHead>
                 <TableHead>{t("oil.col.notes")}</TableHead>
-                <TableHead className="w-[60px]"></TableHead>
+                <TableHead className="w-[100px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -127,15 +165,26 @@ function OilChangesPage() {
                     {o.notes || "—"}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => confirm(t("oil.confirmDelete")) && deleteOilChange(o.id)}
-                      className="text-muted-foreground hover:text-destructive"
-                      aria-label={t("common.delete")}
-                    >
-                      <Trash2 size={16} />
-                    </Button>
+                    <div className="flex items-center gap-1 justify-end">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => startEdit(o)}
+                        className="text-muted-foreground hover:text-primary"
+                        aria-label={t("common.edit")}
+                      >
+                        <Pencil size={16} />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => confirm(t("oil.confirmDelete")) && deleteOilChange(o.id)}
+                        className="text-muted-foreground hover:text-destructive"
+                        aria-label={t("common.delete")}
+                      >
+                        <Trash2 size={16} />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -186,6 +235,32 @@ function OilChangesPage() {
             </Row>
             <div className="flex gap-2 justify-end pt-2">
               <button type="button" onClick={() => setOpen(false)} className="px-4 py-2 rounded-lg bg-secondary">{t("common.cancel")}</button>
+              <button type="submit" disabled={saving} className="px-5 py-2 rounded-lg bg-primary text-primary-foreground font-semibold disabled:opacity-50">{saving ? t("common.saving") : t("common.save")}</button>
+            </div>
+            <style>{`.input{width:100%;background:var(--color-input);border:1px solid var(--color-border);border-radius:.5rem;padding:.6rem .9rem;color:var(--color-foreground);outline:none}.input:focus{border-color:var(--color-ring)}`}</style>
+          </form>
+        </div>
+      )}
+
+      {editOpen && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => setEditOpen(false)}>
+          <form
+            onClick={(e) => e.stopPropagation()}
+            onSubmit={submitEdit}
+            className="bg-card w-full md:max-w-lg rounded-t-2xl md:rounded-2xl p-6 shadow-card grid gap-4"
+          >
+            <h2 className="text-2xl">{t("common.edit")}</h2>
+            <Row label={t("oil.filterLabel")}>
+              <input value={editForm.filtreHuile} onChange={(e) => setEditForm({ ...editForm, filtreHuile: e.target.value })} placeholder="Ex: Mann W 712/52" className="input" />
+            </Row>
+            <Row label={t("oil.cost")}>
+              <input type="number" value={editForm.cout} onChange={(e) => setEditForm({ ...editForm, cout: e.target.value })} className="input" />
+            </Row>
+            <Row label={t("oil.notes")}>
+              <textarea rows={2} value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} className="input" />
+            </Row>
+            <div className="flex gap-2 justify-end pt-2">
+              <button type="button" onClick={() => setEditOpen(false)} className="px-4 py-2 rounded-lg bg-secondary">{t("common.cancel")}</button>
               <button type="submit" disabled={saving} className="px-5 py-2 rounded-lg bg-primary text-primary-foreground font-semibold disabled:opacity-50">{saving ? t("common.saving") : t("common.save")}</button>
             </div>
             <style>{`.input{width:100%;background:var(--color-input);border:1px solid var(--color-border);border-radius:.5rem;padding:.6rem .9rem;color:var(--color-foreground);outline:none}.input:focus{border-color:var(--color-ring)}`}</style>

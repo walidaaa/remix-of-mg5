@@ -251,6 +251,21 @@ export async function deleteOilChange(id: string) {
   ping();
 }
 
+export async function updateOilChange(o: OilChange) {
+  const userId = await uid();
+  if (!userId) return;
+  await supabase
+    .from("oil_changes")
+    .update({
+      filtre_huile: o.filtreHuile || null,
+      cout: o.cout ?? null,
+      notes: o.notes ?? null,
+    })
+    .eq("id", o.id)
+    .eq("user_id", userId);
+  ping();
+}
+
 export async function addMaintenance(m: Omit<MaintenanceItem, "id">) {
   const userId = await uid();
   if (!userId) return;
