@@ -5,11 +5,26 @@ type DocKind = "assurance" | "vignette" | "vehicle";
 
 const PROMPTS: Record<DocKind, string> = {
   assurance:
-    "Document = police d'assurance automobile algérienne. Extrais: compagnie (nom assureur, ex: GIG, SAA, CAAR, CAAT, Trust), numero (N° police/contrat), dateDebut (date d'effet), dateFin (date d'échéance), cout (prime totale en DA, nombre uniquement).",
+    "Document = attestation/police d'assurance automobile algérienne. " +
+    "compagnie = nom de l'assureur (GIG, SAA, CAAR, CAAT, CASH, Trust, Alliance, 2A, MAATEC...). " +
+    "numero = N° de police OU N° de contrat OU N° d'attestation (code alphanumérique, souvent en haut). " +
+    "dateDebut = 'date d'effet' / 'du' / 'valable du' / 'début de validité'. " +
+    "dateFin = 'date d'échéance' / 'au' / 'valable jusqu'au' / 'fin de validité' / 'expire le' — CHERCHE ATTENTIVEMENT, c'est souvent juste à côté de la date de début (format JJ/MM/AAAA). " +
+    "cout = prime totale TTC en DA (nombre).",
   vignette:
-    "Document = vignette automobile algérienne. Extrais: compagnie (administration/agence émettrice si visible), numero (N° vignette/quittance), dateDebut (date de paiement/début validité), dateFin (date de fin de validité, en général 31/12 de l'année), cout (montant en DA, nombre uniquement).",
+    "Document = vignette automobile / quittance fiscale algérienne. " +
+    "compagnie = administration ou recette émettrice. " +
+    "numero = N° vignette OU N° quittance OU N° série. " +
+    "dateDebut = date de paiement / d'émission. " +
+    "dateFin = date de fin de validité (souvent 31/12 de l'année). " +
+    "cout = montant payé en DA.",
   vehicle:
-    "Document = carte grise / permis / document véhicule algérien. Extrais: organisme (organisme émetteur), numero (numéro du document/immatriculation), dateDebut (date de délivrance), dateFin (date d'expiration si présente), cout (frais en DA si présent, sinon null).",
+    "Document = carte grise / permis / immatriculation algérien. " +
+    "organisme = wilaya/daïra/organisme émetteur. " +
+    "numero = N° immatriculation OU N° carte grise. " +
+    "dateDebut = date de délivrance / 1ère mise en circulation. " +
+    "dateFin = date d'expiration si présente. " +
+    "cout = frais en DA si présent.",
 };
 
 export const scanDocument = createServerFn({ method: "POST" })
