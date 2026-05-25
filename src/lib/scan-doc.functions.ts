@@ -43,24 +43,49 @@ export const scanDocument = createServerFn({ method: "POST" })
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-2.5-pro",
         messages: [
           {
             role: "system",
             content:
-              "Tu es un assistant OCR pour documents administratifs algériens. " +
+              "Tu es un OCR expert pour documents administratifs algériens (français/arabe). " +
+              "Lis attentivement TOUT le document — tampons, en-têtes, tableaux, petites mentions. " +
               PROMPTS[data.kind] +
-              " Réponds STRICTEMENT en JSON: {\"compagnie\": string|null, \"organisme\": string|null, \"numero\": string|null, \"dateDebut\": \"YYYY-MM-DD\"|null, \"dateFin\": \"YYYY-MM-DD\"|null, \"cout\": number|null}. " +
-              "Convertis toutes les dates au format YYYY-MM-DD (les dates affichées sont souvent DD/MM/YYYY). Pas de markdown, pas de prose.",
+              " Si une information n'est PAS visible, mets null. NE devine PAS. " +
+              "Pour les dates: convertis JJ/MM/AAAA en YYYY-MM-DD. " +
+              "IMPORTANT: la dateFin est presque toujours présente sur ces documents — cherche-la activement (mentions 'au', 'jusqu'au', 'échéance', 'expire', 'fin de validité').",
           },
           {
             role: "user",
             content: [
-              { type: "text", text: "Extrais les données de ce document." },
+              { type: "text", text: "Extrais les données via l'outil extract_doc_fields." },
               { type: "image_url", image_url: { url: data.imageDataUrl } },
             ],
           },
         ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "extract_doc_fields",
+              description: "Retourne les champs extraits du document.",
+              parameters: {
+                type: "object",
+                properties: {
+                  compagnie: { type: ["string", "null"], description: "Nom de la compagnie d'assurance ou administration" },
+                  organisme: { type: ["string", "null"], description: "Organisme émetteur (pour carte grise)" },
+                  numero: { type: ["string", "null"], description: "Numéro de police/contrat/document/immatriculation" },
+                  dateDebut: { type: ["string", "null"], description: "Date de début au format YYYY-MM-DD" },
+                  dateFin: { type: ["string", "null"], description: "Date de fin/échéance au format YYYY-MM-DD" },
+                  cout: { type: ["number", "null"], description: "Montant en DA (nombre uniquement)" },
+                },
+                required: ["compagnie", "organisme", "numero", "dateDebut", "dateFin", "cout"],
+                additionalProperties: false,
+              },
+            },
+          },
+        ],
+        tool_choice: { type: "function", function: { name: "extract_doc_fields" } },
       }),
     });
 
@@ -72,12 +97,18 @@ export const scanDocument = createServerFn({ method: "POST" })
     }
 
     const json = await res.json();
-    const content: string = json?.choices?.[0]?.message?.content ?? "";
+    const msg = json?.choices?.[0]?.message;
+    const toolArgs = msg?.tool_calls?.[0]?.function?.arguments;
     let parsed: any = {};
     try {
-      const cleaned = content.replace(/```json|```/g, "").trim();
-      const m = cleaned.match(/\{[\s\S]*\}/);
-      parsed = JSON.parse(m ? m[0] : cleaned);
+      if (toolArgs) {
+        parsed = typeof toolArgs === "string" ? JSON.parse(toolArgs) : toolArgs;
+      } else {
+        const content: string = msg?.content ?? "";
+        const cleaned = content.replace(/```json|```/g, "").trim();
+        const m = cleaned.match(/\{[\s\S]*\}/);
+        parsed = JSON.parse(m ? m[0] : cleaned);
+      }
     } catch {
       parsed = {};
     }
