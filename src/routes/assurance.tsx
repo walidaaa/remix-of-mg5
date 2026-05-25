@@ -12,6 +12,9 @@ import {
   type VehicleDoc,
 } from "@/lib/storage";
 import { useEffect, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { scanDocument } from "@/lib/scan-doc.functions";
+import { toast } from "sonner";
 import {
   ShieldCheck,
   AlertTriangle,
