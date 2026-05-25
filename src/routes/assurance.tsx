@@ -309,16 +309,47 @@ function DocumentCard({
     else await updateVehicleDoc(next as VehicleDoc);
   };
 
+  const scanFn = useServerFn(scanDocument);
+
+  const fileToDataUrl = (file: File) =>
+    new Promise<string>((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result as string);
+      r.onerror = reject;
+      r.readAsDataURL(file);
+    });
+
   const onFile = async (file: File | null) => {
     if (!file) return;
     setUploading(true);
     try {
       const path = await uploadDocument(kind, file);
-      if (path) {
-        const next: any = { ...form, scanUrl: path };
-        setForm(next);
-        await persist(next);
+      let next: any = { ...form, ...(path ? { scanUrl: path } : {}) };
+
+      // OCR auto-fill for images
+      if (file.type.startsWith("image/")) {
+        try {
+          toast.loading("Lecture du document…", { id: "scan-doc" });
+          const dataUrl = await fileToDataUrl(file);
+          const extracted = await scanFn({ data: { imageDataUrl: dataUrl, kind } });
+          const merged: any = { ...next };
+          const ref1Val = (extracted as any)[REF1_KEY[kind]];
+          const ref2Val = (extracted as any)[REF2_KEY[kind]];
+          if (ref1Val) merged[REF1_KEY[kind]] = ref1Val;
+          if (ref2Val) merged[REF2_KEY[kind]] = ref2Val;
+          if (extracted.dateDebut) merged.dateDebut = extracted.dateDebut;
+          if (extracted.dateFin) merged.dateFin = extracted.dateFin;
+          if (extracted.cout != null) merged.cout = extracted.cout;
+          next = merged;
+          toast.success("Données extraites automatiquement", { id: "scan-doc" });
+        } catch (e: any) {
+          toast.error(e?.message || "Échec de l'extraction OCR", { id: "scan-doc" });
+        }
       }
+
+      setForm(next);
+      await persist(next);
+      setEditing(false);
     } finally {
       setUploading(false);
     }
